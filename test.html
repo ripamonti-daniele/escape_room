@@ -178,6 +178,8 @@
             color: #c0c0c0;
             font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
+            user-select: text;
+            -webkit-user-select: text;
         }
 
         #bios-screen {
@@ -395,6 +397,18 @@
                         <div id="integrity-bar" class="h-full bg-blue-600 w-full transition-all duration-500"></div>
                     </div>
                 </div>
+
+                <div class="border-t border-gray-500 pt-2 space-y-1">
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span>STEP:</span>
+                        <span id="step-display" class="mono bg-white px-1 border border-gray-500">-</span>
+                    </div>
+                    <div class="text-[10px] text-gray-800 leading-snug">
+                        <span class="font-bold">OBIETTIVO:</span>
+                        <span id="objective-display" class="font-normal">Apri README per iniziare.</span>
+                    </div>
+                </div>
+
                 <div class="text-[10px] text-gray-700">
                     Suggerimento: apri README, poi usa Posta/Internet/Terminale.
                 </div>
@@ -444,7 +458,7 @@
                 </div>
             </div>
             <div class="window-inner bg-black p-1">
-                <div class="h-full terminal-body p-2 overflow-y-auto retro-border-inset border-none" id="terminal-output-container">
+                <div class="h-full terminal-body p-2 overflow-y-auto retro-border-inset border-none" id="terminal-output-container" style="user-select:text;-webkit-user-select:text;">
                     <div id="terminal-output">
                         <div class="mb-2">Microsoft(R) Windows DOS<br>(C) Copyright Microsoft Corp 1990-1998.<br></div>
                     </div>
@@ -591,7 +605,7 @@
        </div>
 
         <!-- ALERT/POPUP WINDOW -->
-        <div id="window-alert" class="hidden window w-[460px] h-[320px]" style="top: 120px; left: 160px; z-index: 300;">
+        <div id="window-alert" class="hidden window w-[460px] h-[340px]" style="top: 120px; left: 160px; z-index: 300;">
             <div class="window-header cursor-move" onmousedown="startDrag(event, 'window-alert')">
                 <span class="inline-flex items-center gap-2">
                     <svg class="svg-ico" style="color:white"><use href="#ico-info"/></svg>
@@ -851,6 +865,32 @@
             const win = document.getElementById(`window-${app}`);
             if (!win) return;
 
+            // se browser è parte di uno step lineare, permetti la chiusura
+            // ma l'utente dovrà riaprirlo dalla taskbar per completare lo step
+            if (app === 'browser' && window.__cg_browserLock) {
+                // chiudi normalmente ma lascia il pulsante in taskbar
+                win.classList.add('hidden');
+                win.classList.remove('maximized');
+                const item = ensureTaskbarItem(app);
+                item.classList.remove('active');
+                if (activeApp === app) activeApp = null;
+                const obj = document.getElementById('objective-display');
+                if (obj) obj.innerText += ' (Internet Explorer ridotto a icona — riaprilo per completare)';
+                return;
+            }
+
+            // se posta è necessaria nello step email, permetti la chiusura
+            if (app === 'mail' && window.__cg_mailLock) {
+                win.classList.add('hidden');
+                win.classList.remove('maximized');
+                const item = ensureTaskbarItem(app);
+                item.classList.remove('active');
+                if (activeApp === app) activeApp = null;
+                const obj = document.getElementById('objective-display');
+                if (obj) obj.innerText += ' (Posta ridotta a icona — riaprila per completare)';
+                return;
+            }
+
             win.classList.add('hidden');
             win.classList.remove('maximized');
 
@@ -928,6 +968,14 @@
             }
             window.closeWindow('alert');
         };
+
+        window.skipToIsoStep = null; // will be set by PyScript
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '0' && window.skipToIsoStep) {
+                window.skipToIsoStep();
+            }
+        });
 
         window.runBios = function() {
             const biosText = document.getElementById('bios-text');
@@ -1010,6 +1058,13 @@
                 self.script_step_idx = 0
                 self.script_waiting = None
                 self.script_email_id = None
+
+                # interattività extra
+                self.web_inspected = set()
+                self.usb_scan_pending = False
+                self.iso_phase = 'browse'
+                self.iso_chosen_hash = None
+                self.iso_entered_hash = ''
 
         state = GameState()
 
@@ -1329,6 +1384,108 @@ Comandi Terminale utili:
 
             js.window.openWindow('alert')
 
+        # --- HELPERS (INTERATTIVITÀ) ---
+
+        def set_step_ui(step_idx, total, hint):
+            try:
+                document.getElementById('step-display').innerText = f"{step_idx}/{total}"
+                # accorcia se contiene "Step x/y:"
+                short = hint
+                if ':' in short:
+                    parts = short.split(':', 1)
+                    if parts[0].strip().lower().startswith('step'):
+                        short = parts[1].strip()
+                document.getElementById('objective-display').innerText = short
+            except Exception:
+                pass
+
+        def parse_url(url: str):
+            # semplice parsing (senza librerie)
+            scheme = 'http'
+            rest = url
+            if '://' in url:
+                scheme, rest = url.split('://', 1)
+            host = rest.split('/', 1)[0]
+            path = '/'
+            if '/' in rest:
+                path = '/' + rest.split('/', 1)[1]
+            return scheme.lower(), host.lower(), path
+
+        def generate_email_clues(email):
+            sender = (email.get('sender') or '').lower()
+            subj = (email.get('subject') or '').lower()
+            body = (email.get('body') or '').lower()
+
+            bad = []
+            good = []
+
+            # euristiche semplici ma didattiche
+            if 'bit.ly' in body or 'tinyurl' in body:
+                bad.append('Link abbreviato (bit.ly/tinyurl)')
+            if 'http://' in body:
+                bad.append('Link non cifrato (http://)')
+            if 'https://' in body:
+                good.append('Link cifrato (https://)')
+            if 'urgente' in subj or 'subito' in subj or 'entro oggi' in body:
+                bad.append('Pressione/urgenza per agire in fretta')
+            if ('inserisci' in body or 'verifica' in body) and ('pass' in body or 'password' in body or 'credenzial' in body):
+                bad.append('Richiesta di credenziali')
+            if 'bonifico' in body or 'iban' in body:
+                bad.append('Richiesta di pagamento/bonifico')
+
+            domain = sender.split('@')[-1] if '@' in sender else sender
+            if any(ch.isdigit() for ch in domain) or '-' in domain or domain.endswith('.ru'):
+                bad.append('Dominio sospetto/typosquatting (numeri/trattini/TLD insolito)')
+
+            if sender.endswith('@azienda.it'):
+                good.append('Mittente interno aziendale (@azienda.it)')
+            if 'nessuna azione richiesta' in body:
+                good.append('Non richiede azioni/credenziali')
+            if 'in allegato' in body or 'cartella condivisa' in body:
+                good.append('Contesto plausibile (allegato/cartella condivisa)')
+
+            # completa con decoy
+            bad_decoy = [
+                'Allegato inatteso',
+                'Tono eccessivamente informale',
+                'Richiesta di installare un programma',
+                'Errori grammaticali evidenti'
+            ]
+            good_decoy = [
+                'Firma aziendale presente',
+                'Contatto già noto in rubrica',
+                'Riferimento a procedura interna'
+            ]
+
+            # assicurati che ci sia materiale
+            if len(bad) == 0:
+                bad.append('Richiesta sospetta (valuta attentamente)')
+            if len(good) == 0:
+                good.append('Tono neutro/non allarmistico')
+
+            # crea lista finale: mischiamo un po' ma in modo stabile (no random) usando l'ID
+            # (se non c'è id, lasciamo ordine naturale)
+            all_items = []
+            for t in bad:
+                all_items.append((t, True))
+            for t in good:
+                all_items.append((t, False))
+
+            # aggiungi 2 decoy del tipo opposto per rendere più “game”
+            if email.get('isPhishing'):
+                for t in good_decoy[:2]:
+                    all_items.append((t, False))
+                for t in bad_decoy[:max(0, 6 - len(all_items))]:
+                    all_items.append((t, True))
+            else:
+                for t in bad_decoy[:2]:
+                    all_items.append((t, True))
+                for t in good_decoy[:max(0, 6 - len(all_items))]:
+                    all_items.append((t, False))
+
+            # limita a 6
+            return all_items[:6]
+
         # --- LINEAR SCRIPT ENGINE ---
 
         def _find_web(level, title):
@@ -1342,33 +1499,35 @@ Comandi Terminale utili:
                 return [
                     {'kind':'email', 'hint':'Step 1/6: Apri Posta e valuta l\'email (phishing).', 'template': email_by_level[1][0]},
                     {'kind':'popup', 'hint':'Step 2/6: Chiudi il pop-up truffa (non cliccare “Riscatta”).'},
-                    {'kind':'web', 'hint':'Step 3/6: Download: scegli la fonte più sicura.', 'scenario': _find_web(1, 'Download Documento')},
+                    {'kind':'web', 'hint':'Step 3/6: Download: analizza i risultati e scegli la fonte più sicura.', 'scenario': _find_web(1, 'Download Documento')},
                     {'kind':'password', 'hint':'Step 4/6: Crea una password robusta e verificane la sicurezza.'},
                     {'kind':'email', 'hint':'Step 5/6: Valuta l\'email con link abbreviato (bit.ly).', 'template': email_by_level[1][1]},
-                    {'kind':'wifi', 'hint':'Step 6/6: WiFi pubblico: non connetterti.'},
+                    {'kind':'wifi', 'hint':'Step 6/6: WiFi pubblico: NON connetterti alla rete aperta.'},
                 ]
 
             if state.level == 2:
                 return [
-                    {'kind':'email', 'hint':'Step 1/7: Spear phishing (email “collega”): valuta e agisci.', 'template': email_by_level[2][0]},
-                    {'kind':'web', 'hint':'Step 2/7: Sito clone: scegli il login corretto.', 'scenario': _find_web(2, 'Login Banca')},
-                    {'kind':'phone', 'hint':'Step 3/7: Telefonata “supporto tecnico”: rifiuta accesso remoto.'},
-                    {'kind':'web', 'hint':'Step 4/7: Software: scegli una fonte ufficiale (evita eseguibili sospetti).', 'scenario': _find_web(2, 'Installazione Codec Video')},
-                    {'kind':'usb', 'hint':'Step 5/7: USB trovata: non aprire.'},
-                    {'kind':'mitm', 'hint':'Step 6/7: Certificato non valido: annulla.'},
-                    {'kind':'session', 'hint':'Step 7/7: Sessione a rischio: termina la sessione.'},
+                    {'kind':'email', 'hint':'Step 1/8: Spear phishing (email “collega”): analizza e agisci.', 'template': email_by_level[2][0]},
+                    {'kind':'web', 'hint':'Step 2/8: Sito clone: analizza URL e scegli il login corretto.', 'scenario': _find_web(2, 'Login Banca')},
+                    {'kind':'phone', 'hint':'Step 3/8: Telefonata “supporto tecnico”: verifica identità e rifiuta accesso remoto.'},
+                    {'kind':'web', 'hint':'Step 4/8: Software: analizza il download e scegli una fonte ufficiale.', 'scenario': _find_web(2, 'Installazione Codec Video')},
+                    {'kind':'usb', 'hint':'Step 5/8: USB trovata: NON aprire. Scansiona o consegna all\'IT.'},
+                    {'kind':'mitm', 'hint':'Step 6/8: Certificato non valido: controlla i dettagli e ANNULLA.'},
+                    {'kind':'iso', 'hint':'Step 7/8: Verifica integrità ISO Ubuntu: usa sha256sum nel Terminale e confronta l\'hash.'},
+                    {'kind':'session', 'hint':'Step 8/8: Sessione a rischio: termina la sessione.'},
                 ]
 
             # level 3
             return [
-                {'kind':'email', 'hint':'Step 1/8: CEO fraud: non procedere e segnala.', 'template': email_by_level[3][0]},
-                {'kind':'email', 'hint':'Step 2/8: Supply chain (email update): segnala.', 'template': email_by_level[3][1]},
-                {'kind':'web', 'hint':'Step 3/8: Supply chain (web): verifica prima di installare.', 'scenario': _find_web(3, 'Aggiornamento Software (Supply Chain)')},
-                {'kind':'web', 'hint':'Step 4/8: Zero-day: evita siti/azioni rischiose.', 'scenario': _find_web(3, 'Forum (Zero-day exploit)')},
-                {'kind':'web', 'hint':'Step 5/8: Cryptojacking: evita siti sospetti.', 'scenario': _find_web(3, 'Sito con Cryptojacking')},
-                {'kind':'insider', 'hint':'Step 6/8: Insider threat: apri Terminale e usa lockuser m.neri.'},
-                {'kind':'ransomware', 'hint':'Step 7/8: Ransomware: Terminale → logs → decrypt KEY-XXXX.'},
-                {'kind':'final', 'hint':'Step 8/8: Attacco finale: Terminale → block <IP>.'},
+                {'kind':'email', 'hint':'Step 1/9: CEO fraud: non procedere e segnala.', 'template': email_by_level[3][0]},
+                {'kind':'email', 'hint':'Step 2/9: Supply chain (email update): segnala.', 'template': email_by_level[3][1]},
+                {'kind':'web', 'hint':'Step 3/9: Supply chain (web): verifica prima di installare.', 'scenario': _find_web(3, 'Aggiornamento Software (Supply Chain)')},
+                {'kind':'web', 'hint':'Step 4/9: Zero-day: evita siti/azioni rischiose.', 'scenario': _find_web(3, 'Forum (Zero-day exploit)')},
+                {'kind':'web', 'hint':'Step 5/9: Cryptojacking: evita siti sospetti.', 'scenario': _find_web(3, 'Sito con Cryptojacking')},
+                {'kind':'insider', 'hint':'Step 6/9: Insider threat: apri Terminale e usa lockuser m.neri.'},
+                {'kind':'ransomware', 'hint':'Step 7/9: Ransomware: Terminale → logs → decrypt KEY-XXXX.'},
+                {'kind':'iso', 'hint':'Step 8/9: Verifica integrità ISO Ubuntu: usa sha256sum nel Terminale e confronta l\'hash.'},
+                {'kind':'final', 'hint':'Step 9/9: Attacco finale: Terminale → block <IP>.'},
             ]
 
         def script_start():
@@ -1380,15 +1539,10 @@ Comandi Terminale utili:
             show_notification('Scenario Lineare', 'Gli eventi arriveranno in ordine (come da guida).', 'success')
 
             # Avvia dopo un breve delay per lasciare in primo piano il README
-            js.setTimeout(create_proxy(script_run_current_step), 1200)
+            js.setTimeout(create_proxy(script_run_current_step), 900)
 
         def script_complete_step():
-            # evita doppio completamento
-            if not state.game_active:
-                return
-            if not state.script_mode:
-                return
-            if not state.script_waiting:
+            if not state.game_active or not state.script_mode or not state.script_waiting:
                 return
 
             state.script_waiting = None
@@ -1397,6 +1551,7 @@ Comandi Terminale utili:
             # sblocca eventuali UI lock
             js.window.__cg_alertLock = False
             js.window.__cg_browserLock = False
+            js.window.__cg_mailLock = False
 
             state.script_step_idx += 1
 
@@ -1407,13 +1562,9 @@ Comandi Terminale utili:
             js.setTimeout(create_proxy(script_run_current_step), 850)
 
         def script_repeat_step(feedback='Scelta non corretta. Riprova.'):
-            """Ripete lo step corrente senza avanzare."""
-            if not state.game_active:
-                return
-            if not state.script_mode:
+            if not state.game_active or not state.script_mode:
                 return
             show_notification('Riprova', feedback, 'error')
-            # ripropone lo step (dopo un attimo)
             js.setTimeout(create_proxy(script_run_current_step), 650)
 
         def deliver_email(template):
@@ -1421,6 +1572,8 @@ Comandi Terminale utili:
             email['id'] = int(datetime.datetime.now().timestamp() * 1000) + random.randint(0, 999)
             email['read'] = False
             email['timestamp'] = datetime.datetime.now().strftime('%H:%M')
+            email['analysis_ok'] = False
+            email['clues'] = generate_email_clues(email)
             state.emails.insert(0, email)
             render_email_list()
             return email
@@ -1430,12 +1583,14 @@ Comandi Terminale utili:
                 return
             if state.script_waiting:
                 return
-
             if state.script_step_idx >= len(state.script_steps):
                 game_win()
                 return
 
             step = state.script_steps[state.script_step_idx]
+            total = len(state.script_steps)
+            set_step_ui(state.script_step_idx + 1, total, step.get('hint', ''))
+
             show_notification('Obiettivo', step.get('hint',''), 'info')
 
             kind = step['kind']
@@ -1444,7 +1599,10 @@ Comandi Terminale utili:
                 e = deliver_email(step['template'])
                 state.script_email_id = e['id']
                 state.script_waiting = 'email'
+                js.window.__cg_mailLock = True
                 show_notification('Nuova Email', e['subject'], 'info')
+                # porta in primo piano la Posta per rendere lo step più immediato
+                js.window.openWindow('mail')
 
             elif kind == 'popup':
                 state.script_waiting = 'popup'
@@ -1452,6 +1610,8 @@ Comandi Terminale utili:
 
             elif kind == 'web':
                 state.script_waiting = 'web'
+                state.web_inspected = set()
+                js.window.__cg_browserLock = True
                 render_web_scenario(step['scenario'])
 
             elif kind == 'wifi':
@@ -1485,6 +1645,10 @@ Comandi Terminale utili:
             elif kind == 'ransomware':
                 state.script_waiting = 'ransomware'
                 trigger_ransomware()
+
+            elif kind == 'iso':
+                state.script_waiting = 'iso'
+                trigger_iso_verify()
 
             elif kind == 'final':
                 state.script_waiting = 'final'
@@ -1522,6 +1686,12 @@ Comandi Terminale utili:
             document.getElementById('threats-blocked').innerText = '0'
             document.getElementById('last-scan').innerText = 'Mai'
 
+            state.web_inspected = set()
+            state.usb_scan_pending = False
+            state.iso_phase = 'browse'
+            state.iso_chosen_hash = None
+            state.iso_entered_hash = ''
+
             # script
             state.script_steps = []
             state.script_step_idx = 0
@@ -1535,6 +1705,9 @@ Comandi Terminale utili:
             document.getElementById('email-list').innerHTML = ''
             document.getElementById('email-content').innerHTML = "<div class='text-gray-500 flex items-center justify-center h-full'>Seleziona un'email per leggere</div>"
             document.getElementById('mail-count').innerText = '0 messaggi'
+
+            # step hud
+            set_step_ui(0, 0, 'Apri README per iniziare.')
 
         def start_game(difficulty):
             state.difficulty = difficulty
@@ -1569,7 +1742,7 @@ Comandi Terminale utili:
             document.getElementById('guide-content').value = guides[level_key]
             js.window.openWindow('guide')
 
-        # --- EMAIL UI ---
+        # --- EMAIL UI (PIÙ INTERATTIVA) ---
 
         def render_email_list():
             list_el = document.getElementById('email-list')
@@ -1608,37 +1781,149 @@ Comandi Terminale utili:
             if email.get('reason'):
                 reason_html = f"<div class='text-[11px] text-gray-600 mt-2'><b>Nota:</b> {email['reason']}</div>"
 
+            # clues UI
+            clue_html = ''
+            for i, (txt, is_bad) in enumerate(email.get('clues', [])):
+                clue_html += f"""
+                    <label class='flex items-start gap-2'>
+                        <input id='clue-{email['id']}-{i}' type='checkbox' class='mt-0.5'/>
+                        <span class='text-[11px]'>{txt}</span>
+                    </label>
+                """
+
             content.innerHTML = f"""
                 <div class='mb-3 border-b border-gray-400 pb-2 bg-white p-2 border border-gray-400 shadow-sm'>
                     <h2 class='text-lg font-bold text-blue-900'>{email['subject']}</h2>
                     <div class='text-xs text-gray-700'>Da: <span class='mono bg-yellow-100 px-1 border border-gray-300'>{email['sender']}</span></div>
                 </div>
-                <div class='flex-1 overflow-y-auto mb-3 text-sm leading-relaxed p-2 bg-white border border-gray-400 h-52'>
+                <div class='flex-1 overflow-y-auto mb-3 text-sm leading-relaxed p-2 bg-white border border-gray-400 h-44'>
                     {email['body']}
                     {reason_html}
                 </div>
+
+                <div class='bg-yellow-50 border border-gray-400 p-2 mb-3'>
+                    <div class='text-xs font-bold'>Analisi Rapida (interattiva)</div>
+                    <div class='text-[11px] text-gray-700'>Seleziona gli indizi e scegli una classificazione. Poi clicca <b>Conferma analisi</b>.</div>
+
+                    <div class='mt-2 flex gap-4 text-xs'>
+                        <label class='inline-flex items-center gap-2'>
+                            <input id='cls-phish-{email['id']}' type='radio' name='cls-{email['id']}'/>
+                            Phishing
+                        </label>
+                        <label class='inline-flex items-center gap-2'>
+                            <input id='cls-safe-{email['id']}' type='radio' name='cls-{email['id']}'/>
+                            Legittima
+                        </label>
+                    </div>
+
+                    <div class='mt-2 grid grid-cols-1 gap-1'>
+                        {clue_html}
+                    </div>
+
+                    <div class='mt-2 flex items-center gap-2'>
+                        <button id='btn-analyze-{email['id']}' class='retro-btn px-3 py-1 text-xs font-bold'>Conferma analisi</button>
+                        <div id='analysis-result-{email['id']}' class='text-xs font-bold'></div>
+                    </div>
+                </div>
+
                 <div class='flex gap-2 mt-auto'>
-                    <button id='btn-report-{email['id']}' class='retro-btn flex-1 py-2 font-bold text-red-900'>Segnala Phishing</button>
-                    <button id='btn-safe-{email['id']}' class='retro-btn flex-1 py-2 font-bold text-green-900'>Segna come Sicuro</button>
+                    <button id='btn-report-{email['id']}' class='retro-btn flex-1 py-2 font-bold text-red-900 opacity-60' disabled>Segnala Phishing</button>
+                    <button id='btn-safe-{email['id']}' class='retro-btn flex-1 py-2 font-bold text-green-900 opacity-60' disabled>Segna come Sicuro</button>
                 </div>
             """
 
-            def on_report(ev):
+            def unlock_actions():
+                b1 = document.getElementById(f"btn-report-{email['id']}")
+                b2 = document.getElementById(f"btn-safe-{email['id']}")
+                if b1:
+                    b1.disabled = False
+                    b1.classList.remove('opacity-60')
+                if b2:
+                    b2.disabled = False
+                    b2.classList.remove('opacity-60')
+
+            def analyze(ev=None):
+                # verifica classificazione + qualità indizi
+                chosen_phish = bool(document.getElementById(f"cls-phish-{email['id']}").checked)
+                chosen_safe = bool(document.getElementById(f"cls-safe-{email['id']}").checked)
+
+                if not (chosen_phish or chosen_safe):
+                    show_notification('Analisi', 'Seleziona una classificazione (Phishing/Legittima).', 'error')
+                    return
+
+                selected_bad = 0
+                selected_good = 0
+
+                for i, (_txt, is_bad) in enumerate(email.get('clues', [])):
+                    cb = document.getElementById(f"clue-{email['id']}-{i}")
+                    if cb and cb.checked:
+                        if is_bad:
+                            selected_bad += 1
+                        else:
+                            selected_good += 1
+
+                # regole: se dici Phishing → seleziona almeno 2 indizi sospetti e 0 indizi "buoni"
+                #         se dici Legittima → seleziona almeno 2 indizi buoni e 0 sospetti
+                evidence_ok = False
+                if chosen_phish:
+                    evidence_ok = (selected_bad >= 2 and selected_good == 0)
+                else:
+                    evidence_ok = (selected_good >= 2 and selected_bad == 0)
+
+                correct = (chosen_phish and email.get('isPhishing')) or (chosen_safe and (not email.get('isPhishing')))
+
+                res = document.getElementById(f"analysis-result-{email['id']}")
+
+                if correct and evidence_ok:
+                    email['analysis_ok'] = True
+                    if res:
+                        res.innerText = 'Analisi OK.'
+                        res.style.color = '#0a6b0a'
+                    show_notification('Analisi completata', 'Ora puoi scegliere Segnala/Sicuro.', 'success')
+                    unlock_actions()
+                else:
+                    # piccola penalità per rendere “game”
+                    update_score(-10)
+                    if res:
+                        res.innerText = 'Analisi non convincente: rivedi gli indizi.'
+                        res.style.color = '#b00000'
+                    show_notification('Analisi', 'Indizi/classificazione non coerenti. Riprova.', 'error')
+
+            def on_report(ev=None):
                 handle_email_action(email['id'], 'report')
 
-            def on_safe(ev):
+            def on_safe(ev=None):
                 handle_email_action(email['id'], 'safe')
 
+            pA = create_proxy(analyze)
             p1 = create_proxy(on_report)
             p2 = create_proxy(on_safe)
-            state.proxy_refs.extend([p1, p2])
+            state.proxy_refs.extend([pA, p1, p2])
 
+            document.getElementById(f"btn-analyze-{email['id']}").onclick = pA
             document.getElementById(f"btn-report-{email['id']}").onclick = p1
             document.getElementById(f"btn-safe-{email['id']}").onclick = p2
+
+            # Enter per confermare analisi
+            def on_key(ev):
+                if ev.key == 'Enter':
+                    analyze()
+
+            pK = create_proxy(on_key)
+            state.proxy_refs.append(pK)
+            content.addEventListener('keydown', pK)
+            # rende focusabile per ricevere keydown
+            content.setAttribute('tabindex', '0')
+            content.focus()
 
         def handle_email_action(email_id, action):
             email = next((e for e in state.emails if e['id'] == email_id), None)
             if not email:
+                return
+
+            # gating: serve analisi prima
+            if state.script_mode and not email.get('analysis_ok'):
+                show_notification('Prima analizza', 'Completa la sezione "Analisi Rapida" prima di scegliere.', 'error')
                 return
 
             correct = (action == 'report' and email['isPhishing']) or (action == 'safe' and not email['isPhishing'])
@@ -1669,17 +1954,22 @@ Comandi Terminale utili:
             render_email_list()
             document.getElementById('email-content').innerHTML = "<div class='text-gray-500 flex items-center justify-center h-full'>Seleziona un'email per leggere</div>"
 
+            # sblocca chiusura posta se era uno step lineare
+            try:
+                js.window.__cg_mailLock = False
+            except Exception:
+                pass
+
             # modalità lineare: avanza SOLO se corretto, altrimenti ripeti lo step (stesso template)
             if state.script_waiting == 'email' and state.script_email_id == email_id:
                 if correct:
                     script_complete_step()
                 else:
-                    # riproponi lo stesso step (nuova email simile)
                     state.script_waiting = None
                     state.script_email_id = None
                     script_repeat_step('Azione errata sull\'email. Riprova valutandola con attenzione.')
 
-        # --- WEB SCENARIO ---
+        # --- WEB SCENARIO (PIÙ INTERATTIVO) ---
 
         def render_web_scenario(scenario):
             document.getElementById('browser-url').innerText = 'http://risultati-ricerca.local/'
@@ -1687,9 +1977,15 @@ Comandi Terminale utili:
             content.innerHTML = ''
 
             title = document.createElement('div')
-            title.className = 'text-lg font-bold mb-3'
+            title.className = 'text-lg font-bold mb-1'
             title.innerText = f"Risultati ricerca: {scenario['title']}"
             content.appendChild(title)
+
+            subtitle = document.createElement('div')
+            subtitle.className = 'text-[11px] text-gray-700 mb-3'
+            subtitle.innerHTML = "Per rendere la scelta più realistica: <b>Analizza</b> un risultato prima di selezionarlo." \
+                                " (Dominio/HTTPS/estensione file)."
+            content.appendChild(subtitle)
 
             wrapper = document.createElement('div')
             wrapper.className = 'grid grid-cols-1 gap-3'
@@ -1698,36 +1994,100 @@ Comandi Terminale utili:
                 ('Sito consigliato', True, scenario['safe']),
                 ('Sito alternativo', False, scenario['unsafe'])
             ]
-            random.shuffle(options)
 
-            for label, is_safe, data in options:
-                card = document.createElement('div')
-                card.className = 'retro-border p-3 bg-white cursor-pointer hover:bg-blue-50'
-                scheme = 'https' if data['url'].startswith('https') else 'http'
+            # manteniamo ordine stabile (no shuffle)
+            opt_map = []
+            for idx, (label, is_safe, data) in enumerate(options):
+                opt_key = f"opt{idx}"
+                opt_map.append((opt_key, label, is_safe, data))
+
+            for opt_key, label, is_safe, data in opt_map:
+                scheme, host, path = parse_url(data['url'])
                 lock = 'SICURO' if scheme == 'https' else 'NON SICURO'
 
+                card = document.createElement('div')
+                card.className = 'retro-border p-3 bg-white'
                 card.innerHTML = f"""
-                    <div class='text-xs text-gray-600'>{label}</div>
-                    <div class='text-blue-700 underline text-sm font-bold'>{data['url']}</div>
-                    <div class='text-xs text-gray-800 mt-1'>{data['desc']}</div>
-                    <div class='mt-2 text-xs'><b>Risorsa:</b> {data['file']}</div>
-                    <div class='mt-1 text-[11px]'>Connessione: <b>{lock}</b></div>
+                    <div class='flex items-start justify-between gap-3'>
+                        <div>
+                            <div class='text-xs text-gray-600'>{label}</div>
+                            <div class='text-blue-700 underline text-sm font-bold'>{data['url']}</div>
+                            <div class='text-xs text-gray-800 mt-1'>{data['desc']}</div>
+                            <div class='mt-2 text-xs'><b>Risorsa:</b> {data['file']}</div>
+                            <div class='mt-1 text-[11px]'>Connessione: <b>{lock}</b></div>
+                        </div>
+                        <div class='flex flex-col gap-2'>
+                            <button id='btn-inspect-{opt_key}' class='retro-btn px-2 py-1 text-xs font-bold'>Analizza</button>
+                            <button id='btn-choose-{opt_key}' class='retro-btn px-2 py-1 text-xs font-bold'>Scegli</button>
+                        </div>
+                    </div>
+                    <div id='inspect-box-{opt_key}' class='hidden mt-2 p-2 bg-gray-50 border border-gray-400 text-[11px]'>
+                        <div class='font-bold mb-1'>Dettagli Analisi</div>
+                        <div><b>Dominio:</b> <span class='mono'>{host}</span></div>
+                        <div><b>Protocollo:</b> <span class='mono'>{scheme.upper()}</span></div>
+                        <div><b>Percorso:</b> <span class='mono'>{path}</span></div>
+                        <div><b>Nome file:</b> <span class='mono'>{data['file']}</span></div>
+                        <div id='risk-{opt_key}' class='mt-1'></div>
+                    </div>
                 """
 
-                def make_choice(safe, scen):
-                    return lambda ev: handle_web_choice(safe, scen)
-
-                p = create_proxy(make_choice(is_safe, scenario))
-                state.proxy_refs.append(p)
-                card.onclick = p
                 wrapper.appendChild(card)
 
+            # IMPORTANTE: aggiungi wrapper al DOM PRIMA di cercare i bottoni per id
             content.appendChild(wrapper)
 
-            js.window.openWindow('browser')
-            show_notification('Internet', 'Seleziona un sito da cui procedere.', 'info')
+            for opt_key, label, is_safe, data in opt_map:
+                def make_inspect(key, safe, scen, d):
+                    return lambda ev: handle_web_inspect(key, safe, scen, d)
 
-        def handle_web_choice(is_safe, scenario):
+                def make_choose(key, safe, scen):
+                    return lambda ev: handle_web_choose(key, safe, scen)
+
+                pI = create_proxy(make_inspect(opt_key, is_safe, scenario, data))
+                pC = create_proxy(make_choose(opt_key, is_safe, scenario))
+                state.proxy_refs.extend([pI, pC])
+
+                document.getElementById(f"btn-inspect-{opt_key}").onclick = pI
+                document.getElementById(f"btn-choose-{opt_key}").onclick = pC
+
+            js.window.openWindow('browser')
+            show_notification('Internet', 'Analizza un risultato e poi scegli.', 'info')
+
+        def handle_web_inspect(opt_key, is_safe, scenario, data):
+            # mostra dettagli e marca come "ispezionato"
+            box = document.getElementById(f"inspect-box-{opt_key}")
+            if box:
+                box.classList.remove('hidden')
+
+            scheme, host, _path = parse_url(data['url'])
+            flags = []
+            if scheme != 'https':
+                flags.append("Connessione non cifrata (HTTP)")
+            if str(data.get('file','')).lower().endswith('.exe'):
+                flags.append("Eseguibile (.exe)")
+            if '.exe' in str(data.get('file','')).lower() and '.pdf' in str(data.get('file','')).lower():
+                flags.append("Doppia estensione (es. .pdf.exe)")
+            if any(ch.isdigit() for ch in host) or host.endswith('.ru'):
+                flags.append("Dominio sospetto (typosquatting/TLD)")
+
+            risk_el = document.getElementById(f"risk-{opt_key}")
+            if risk_el:
+                if flags:
+                    risk_el.innerHTML = "<b style='color:#b00000'>Rischi:</b> " + ", ".join(flags)
+                else:
+                    risk_el.innerHTML = "<b style='color:#0a6b0a'>Nessun rischio evidente</b> (comunque procedi con cautela)"
+
+            state.web_inspected.add(opt_key)
+            show_notification('Analisi', f"Ispezionato: {host}", 'success')
+
+        def handle_web_choose(opt_key, is_safe, scenario):
+            # per avanzare in modalità lineare serve ispezione
+            if state.script_waiting == 'web' and opt_key not in state.web_inspected:
+                show_notification('Prima analizza', 'Clicca "Analizza" prima di scegliere.', 'error')
+                return
+
+            # sblocca prima di chiudere (altrimenti la X è bloccata in modalità lineare)
+            js.window.__cg_browserLock = False
             js.window.closeWindow('browser')
 
             if is_safe:
@@ -1735,7 +2095,6 @@ Comandi Terminale utili:
                 show_notification('Scelta corretta', 'Hai scelto una fonte più sicura.', 'success')
                 if scenario['title'].lower().startswith('sito http'):
                     state.session_at_risk = False
-
                 if state.script_waiting == 'web':
                     script_complete_step()
             else:
@@ -1749,7 +2108,6 @@ Comandi Terminale utili:
                 if 'cryptojacking' in t:
                     start_cryptojack_damage()
 
-                # in modalità lineare: ripeti lo step finché non scegli la fonte sicura
                 if state.script_waiting == 'web':
                     state.script_waiting = None
                     script_repeat_step('Per continuare devi scegliere la fonte più sicura (HTTPS/ufficiale/verificata).')
@@ -1773,6 +2131,17 @@ Comandi Terminale utili:
         # --- POPUP EVENTS ---
 
         def trigger_popup_fake():
+            extra_html = """
+                <div class='text-[11px] text-gray-800'>
+                    Mini-sfida: individua gli indizi di truffa.
+                    <ul class='mt-1 list-disc pl-5 space-y-1'>
+                        <li>Promessa premio non richiesta</li>
+                        <li>Richiesta di clic immediato</li>
+                        <li>Assenza di contesto</li>
+                    </ul>
+                </div>
+            """
+
             def wrong():
                 js.window.closeWindow('alert')
                 update_integrity(-18)
@@ -1794,39 +2163,58 @@ Comandi Terminale utili:
                 message='Hai vinto un iPhone! Clicca "Riscatta" per riceverlo subito.',
                 detail='Pop-up pubblicitario non richiesto. Rischio truffa/malware.',
                 icon='warn',
+                extra_html=extra_html,
                 buttons=[
                     {'label': 'Riscatta', 'handler': wrong},
                     {'label': 'Chiudi', 'handler': correct}
                 ]
             )
 
+        # --- WIFI (PIÙ INTERATTIVO) ---
+
         def trigger_wifi_public():
+            extra_html = """
+                <div class='text-[11px] text-gray-800'>
+                    <div class='font-bold'>Reti trovate:</div>
+                    <div class='mt-1 space-y-1'>
+                        <div class='mono'>• WiFi Gratis (OPEN)</div>
+                        <div class='mono'>• Hotspot 4G (PERSONALE)</div>
+                        <div class='mono'>• AziendaGuest (WPA2)</div>
+                    </div>
+                    <div class='mt-2 text-gray-700'>Suggerimento: evita <b>OPEN</b>. Se devi lavorare, usa <b>Hotspot</b> o <b>WPA2</b>.</div>
+                </div>
+            """
+
             show_alert(
                 title='Connessione WiFi',
-                message="Rete disponibile: 'WiFi Gratis' (nessuna protezione). Connettersi?",
-                detail='Rete aperta: rischio intercettazione (MITM) e furto sessione.',
+                message="Rete disponibile: 'WiFi Gratis' (nessuna protezione).",
+                detail='Scegli come connetterti (o non connetterti).',
                 icon='warn',
+                extra_html=extra_html,
                 buttons=[
-                    {
-                        'label': 'Connetti',
-                        'handler': lambda: (js.window.closeWindow('alert'), set_public_wifi(True))
-                    },
-                    {
-                        'label': 'Ignora',
-                        'handler': lambda: (js.window.closeWindow('alert'), set_public_wifi(False))
-                    }
+                    {'label': 'Connetti OPEN', 'handler': lambda: (js.window.closeWindow('alert'), set_public_wifi('open'))},
+                    {'label': 'Usa Hotspot', 'handler': lambda: (js.window.closeWindow('alert'), set_public_wifi('hotspot'))},
+                    {'label': 'Ignora', 'handler': lambda: (js.window.closeWindow('alert'), set_public_wifi('ignore'))},
                 ]
             )
 
-        def set_public_wifi(connect):
-            if connect:
+        def set_public_wifi(choice):
+            if choice == 'open':
                 state.on_public_wifi = True
                 update_integrity(-12)
                 update_score(-20)
-                show_notification('Rete aperta', 'Connesso a WiFi pubblico: rischio aumentato.', 'error')
+                show_notification('Rete aperta', 'Connesso a WiFi OPEN: rischio aumentato.', 'error')
                 if state.script_waiting == 'wifi':
                     state.script_waiting = None
-                    script_repeat_step('Per continuare devi IGNORARE il WiFi pubblico non protetto.')
+                    script_repeat_step('Per continuare evita la rete OPEN. Scegli Hotspot o Ignora.')
+
+            elif choice == 'hotspot':
+                state.on_public_wifi = False
+                update_score(80)
+                show_notification('Scelta sicura', 'Hotspot attivato (connessione più sicura).', 'success')
+                if state.script_waiting == 'wifi':
+                    script_complete_step()
+
             else:
                 state.on_public_wifi = False
                 update_score(60)
@@ -1834,99 +2222,207 @@ Comandi Terminale utili:
                 if state.script_waiting == 'wifi':
                     script_complete_step()
 
+        # --- USB (PIÙ INTERATTIVO: scan reale) ---
+
         def trigger_usb_trojan():
+            extra_html = """
+                <div class='text-[11px] text-gray-800'>
+                    Mini-procedura consigliata:
+                    <ol class='mt-1 list-decimal pl-5 space-y-1'>
+                        <li>Non aprire i file</li>
+                        <li>Scansiona con Antivirus</li>
+                        <li>Se sospetto: consegna all'IT</li>
+                    </ol>
+                </div>
+            """
+
+            def open_wrong():
+                js.window.closeWindow('alert')
+                update_integrity(-22)
+                update_score(-60)
+                show_notification('USB Trojan', 'Esecuzione sospetta rilevata.', 'error')
+                if state.script_waiting == 'usb':
+                    state.script_waiting = None
+                    script_repeat_step('Hai aperto la USB: riprova scegliendo scansione o consegna IT.')
+
+            def deliver_it():
+                js.window.closeWindow('alert')
+                update_score(110)
+                show_notification('Ottimo', 'USB consegnata al reparto IT.', 'success')
+                if state.script_waiting == 'usb':
+                    script_complete_step()
+
+            def scan_path():
+                js.window.closeWindow('alert')
+                state.usb_scan_pending = True
+                show_notification('Antivirus', 'Apri Antivirus e avvia una Scansione Rapida.', 'info')
+                try:
+                    document.getElementById('objective-display').innerText = 'USB: apri Antivirus e fai Scansione Rapida per mettere in quarantena.'
+                except Exception:
+                    pass
+                js.window.openWindow('antivirus')
+
             show_alert(
                 title='Dispositivo USB',
-                message="Trovata chiavetta USB 'FOTO_VACANZE'. Aprire i file?",
-                detail='Possibile USB trojan con auto-esecuzione.',
+                message="Trovata chiavetta USB 'FOTO_VACANZE'.",
+                detail='Scegli una procedura sicura.',
                 icon='warn',
+                extra_html=extra_html,
                 buttons=[
-                    {
-                        'label': 'Apri',
-                        'handler': lambda: (
-                            js.window.closeWindow('alert'),
-                            update_integrity(-22),
-                            update_score(-60),
-                            show_notification('USB Trojan', 'Esecuzione sospetta rilevata.', 'error'),
-                            script_complete_step()
-                        )
-                    },
-                    {
-                        'label': 'Non aprire',
-                        'handler': lambda: (
-                            js.window.closeWindow('alert'),
-                            update_score(90),
-                            show_notification('OK', 'Hai evitato un USB trojan.', 'success'),
-                            script_complete_step()
-                        )
-                    }
+                    {'label': 'Apri file', 'handler': open_wrong},
+                    {'label': 'Scansiona', 'handler': scan_path},
+                    {'label': 'Consegna IT', 'handler': deliver_it},
                 ]
             )
+
+        # --- PHONE (PIÙ INTERATTIVO: checklist verifica) ---
 
         def trigger_phone_support():
+            extra_html = """
+                <div class='text-[11px] text-gray-800'>
+                    <div class='font-bold mb-1'>Checklist verifica identità (scegli almeno 2):</div>
+                    <div class='space-y-1'>
+                        <label class='flex items-start gap-2'><input id='phk1' type='checkbox' class='mt-0.5'/> Chiedi ID ticket / motivo dettagliato</label>
+                        <label class='flex items-start gap-2'><input id='phk2' type='checkbox' class='mt-0.5'/> Richiama su numero ufficiale (directory)</label>
+                        <label class='flex items-start gap-2'><input id='phk3' type='checkbox' class='mt-0.5'/> Richiedi email di conferma da dominio aziendale</label>
+                        <label class='flex items-start gap-2'><input id='phk4' type='checkbox' class='mt-0.5'/> Verifica con il tuo responsabile</label>
+                    </div>
+                    <div class='mt-2'>
+                        <div class='font-bold text-[11px]'>Numero ufficiale (directory):</div>
+                        <div class='mono bg-white border border-gray-500 inline-block px-1'>800-123-456</div>
+                        <div class='mt-1 flex gap-2'>
+                            <input id='ph-number' class='flex-1 px-2 py-1 border border-gray-500 mono text-xs' placeholder='Numero che vuoi richiamare...' />
+                            <button id='ph-verify-btn' class='retro-btn px-3 py-1 text-xs font-bold'>Verifica</button>
+                        </div>
+                        <div id='ph-res' class='mt-1 text-xs font-bold'></div>
+                    </div>
+                </div>
+            """
+
+            def accept_wrong():
+                js.window.closeWindow('alert')
+                update_integrity(-25)
+                update_score(-70)
+                show_notification('Compromissione', 'Accesso remoto concesso.', 'error')
+                if state.script_waiting == 'phone':
+                    state.script_waiting = None
+                    script_repeat_step('Per continuare devi verificare l\'identità e rifiutare l\'accesso remoto.')
+
+            def refuse_ok():
+                js.window.closeWindow('alert')
+                update_score(90)
+                show_notification('Bene', 'Hai rifiutato la richiesta sospetta.', 'success')
+                if state.script_waiting == 'phone':
+                    script_complete_step()
+
+            def verify_flow():
+                # richiesto: almeno 2 checkbox + numero ufficiale corretto
+                checks = 0
+                for cid in ('phk1','phk2','phk3','phk4'):
+                    el = document.getElementById(cid)
+                    if el and el.checked:
+                        checks += 1
+                num = (document.getElementById('ph-number').value or '').strip()
+
+                res = document.getElementById('ph-res')
+
+                if checks < 2:
+                    if res:
+                        res.innerText = 'Seleziona almeno 2 verifiche.'
+                        res.style.color = '#b00000'
+                    update_score(-10)
+                    return
+
+                if num != '800-123-456':
+                    if res:
+                        res.innerText = 'Numero non ufficiale: rischio di truffa. Usa quello in directory.'
+                        res.style.color = '#b00000'
+                    update_score(-10)
+                    return
+
+                if res:
+                    res.innerText = 'Verifica OK. Ora rifiuta accesso remoto.'
+                    res.style.color = '#0a6b0a'
+                show_notification('Verifica', 'Identità verificata. Ora rifiuta l\'accesso remoto.', 'success')
+
             show_alert(
                 title='Chiamata in arrivo',
-                message='"Supporto Tecnico" richiede accesso remoto al PC per risolvere un problema urgente.',
-                detail='Tecnica di social engineering: nessuno dovrebbe chiedere accesso remoto senza verifica.',
+                message='"Supporto Tecnico" richiede accesso remoto al PC.',
+                detail='Procedi con verifica identità (interattivo).',
                 icon='warn',
+                extra_html=extra_html,
                 buttons=[
-                    {
-                        'label': 'Accetta',
-                        'handler': lambda: (
-                            js.window.closeWindow('alert'),
-                            update_integrity(-25),
-                            update_score(-70),
-                            show_notification('Compromissione', 'Accesso remoto concesso.', 'error'),
-                            script_complete_step()
-                        )
-                    },
-                    {
-                        'label': 'Rifiuta',
-                        'handler': lambda: (
-                            js.window.closeWindow('alert'),
-                            update_score(90),
-                            show_notification('Bene', 'Hai rifiutato una richiesta sospetta.', 'success'),
-                            script_complete_step()
-                        )
-                    }
+                    {'label': 'Concedi accesso', 'handler': accept_wrong},
+                    {'label': 'Rifiuta accesso', 'handler': refuse_ok},
                 ]
             )
 
+            # bind verify btn
+            btn = document.getElementById('ph-verify-btn')
+            if btn:
+                p = create_proxy(lambda ev: verify_flow())
+                state.proxy_refs.append(p)
+                btn.onclick = p
+
+        # --- MITM / SESSION (lineare: solo scelta corretta avanza) ---
+
         def trigger_mitm_warning():
+            extra_html = """
+                <div class='text-[11px] text-gray-800'>
+                    <div class='font-bold'>Dettagli certificato:</div>
+                    <div class='mono'>CN: portale-servizi.it</div>
+                    <div class='mono'>Issuer: UnknownCA</div>
+                    <div class='mono'>Fingerprint: 12:34:56:AA:BB</div>
+                    <div class='mt-2 text-gray-700'>Indizio: "UnknownCA" è un grosso campanello d'allarme.</div>
+                </div>
+            """
+
+            def wrong():
+                js.window.closeWindow('alert')
+                update_integrity(-20)
+                update_score(-50)
+                show_notification('MITM', 'Connessione non sicura accettata.', 'error')
+                if state.script_waiting == 'mitm':
+                    state.script_waiting = None
+                    script_repeat_step('Dovevi ANNULLARE: certificato non valido = rischio MITM.')
+
+            def correct():
+                js.window.closeWindow('alert')
+                update_score(80)
+                show_notification('OK', 'Hai evitato una connessione rischiosa.', 'success')
+                if state.script_waiting == 'mitm':
+                    script_complete_step()
+
             show_alert(
                 title='Certificato non valido',
                 message='Il certificato del sito non è valido. Continuare comunque?',
                 detail='Potrebbe essere un attacco Man-in-the-Middle su rete compromessa.',
                 icon='warn',
+                extra_html=extra_html,
                 buttons=[
-                    {
-                        'label': 'Continua',
-                        'handler': lambda: (
-                            js.window.closeWindow('alert'),
-                            update_integrity(-20),
-                            update_score(-50),
-                            show_notification('MITM', 'Connessione non sicura accettata.', 'error'),
-                            script_complete_step()
-                        )
-                    },
-                    {
-                        'label': 'Annulla',
-                        'handler': lambda: (
-                            js.window.closeWindow('alert'),
-                            update_score(80),
-                            show_notification('OK', 'Hai evitato una connessione rischiosa.', 'success'),
-                            script_complete_step()
-                        )
-                    }
+                    {'label': 'Continua', 'handler': wrong},
+                    {'label': 'Annulla', 'handler': correct}
                 ]
             )
 
         def trigger_session_hijack():
+            extra_html = """
+                <div class='text-[11px] text-gray-800'>
+                    <div class='font-bold'>Indizi:</div>
+                    <ul class='mt-1 list-disc pl-5 space-y-1'>
+                        <li>Sessione creata su rete non fidata</li>
+                        <li>Possibile furto cookie</li>
+                        <li>Termina sessione per ruotare token</li>
+                    </ul>
+                </div>
+            """
+
             show_alert(
                 title='Allerta sessione',
                 message='Rilevata sessione a rischio. Terminare la sessione?',
                 detail='Possibile furto cookie / session hijacking.',
                 icon='warn',
+                extra_html=extra_html,
                 buttons=[
                     {
                         'label': 'Termina sessione',
@@ -1952,7 +2448,235 @@ Comandi Terminale utili:
             update_score(-40)
             show_notification('Sessione compromessa', 'Cookie/sessione potenzialmente rubati.', 'error')
             if state.script_waiting == 'session':
+                state.script_waiting = None
+                script_repeat_step('Per continuare devi TERMINARE la sessione a rischio.')
+
+        # --- ISO HASH VERIFY ---
+
+        UBUNTU_ISO_HASH = 'b85286d9855f549ed9895763519f6a295a7698fb9c5c5345811b3eefadfb6f07'
+        UBUNTU_ISO_FAKE_HASH = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2'
+        UBUNTU_ISO_NAME = 'ubuntu-22.04-desktop-amd64.iso'
+
+        def trigger_iso_verify():
+            state.iso_phase = 'browse'
+            state.iso_chosen_hash = None
+            _render_ubuntu_browser()
+
+        def _render_ubuntu_browser():
+            document.getElementById('browser-url').innerText = 'https://ubuntu.com/download/desktop'
+            content_el = document.getElementById('browser-content')
+            import random as _rnd
+            sources = [
+                {'id':'src_official','url':'https://ubuntu.com/tutorials/verify-ubuntu-downloads','correct':True},
+                {'id':'src_fake1','url':'http://ubuntu-mirror-download.net/SHA256SUMS','correct':False},
+                {'id':'src_fake2','url':'http://linuxiso-checksums.org/ubuntu/SHA256','correct':False},
+            ]
+            _rnd.shuffle(sources)
+            links_html = ""
+            for s in sources:
+                links_html += (
+                    "<div style='margin-bottom:6px;'>"
+                    "<a id='" + s['id'] + "' href='#' style='color:#1a0dab;font-size:12px;"
+                    "font-family:Arial,sans-serif;text-decoration:underline;cursor:pointer;'>"
+                    + s['url'] + "</a></div>"
+                )
+            content_el.innerHTML = (
+                "<div style='font-family:Arial,sans-serif;font-size:13px;padding:6px;'>"
+                "<div style='background:#E95420;color:white;padding:8px 12px;font-size:15px;"
+                "font-weight:bold;margin-bottom:10px;'>🧡 Ubuntu 22.04 LTS &mdash; Download</div>"
+                "<p style='color:#333;font-size:12px;margin-bottom:12px;'>"
+                "Scarica Ubuntu 22.04 LTS Desktop (1.4 GB).<br>"
+                "Prima di installare, verifica l&apos;integrit&agrave; del file.</p>"
+                "<div style='margin-bottom:14px;'>"
+                "<div style='font-weight:bold;font-size:12px;margin-bottom:6px;color:#333;'>"
+                "Ottieni il comando per verificare l&apos;hash:</div>"
+                + links_html +
+                "</div>"
+                "<hr style='border:none;border-top:1px solid #ccc;margin-bottom:12px;'/>"
+                "<div style='font-weight:bold;font-size:12px;margin-bottom:4px;color:#333;'>📥 Download</div>"
+                "<div style='font-size:11px;color:#555;margin-bottom:6px;'>File: <b>ubuntu-22.04-desktop-amd64.iso</b></div>"
+                "<button id='iso-download-btn' style='background:#E95420;color:white;border:none;"
+                "padding:5px 16px;cursor:pointer;font-size:12px;font-family:Arial,sans-serif;'>Scarica ora</button>"
+                "</div>"
+            )
+            js.window.openWindow('browser')
+            for s in sources:
+                def make_src_click(src):
+                    def _click(ev):
+                        _iso_run_command(src)
+                    return _click
+                p = create_proxy(make_src_click(s))
+                state.proxy_refs.append(p)
+                document.getElementById(s['id']).onclick = p
+            def on_download(ev):
+                if state.iso_chosen_hash is None:
+                    show_notification('Attenzione', 'Prima ottieni il comando per verificare l’hash.', 'error')
+                    return
+                _iso_open_hash_form()
+            pD = create_proxy(on_download)
+            state.proxy_refs.append(pD)
+            document.getElementById('iso-download-btn').onclick = pD
+
+        def _iso_run_command(src):
+            js.window.openWindow('terminal')
+            cmd_shown = 'sha256sum ubuntu-22.04-desktop-amd64.iso'
+            print_terminal('> ' + cmd_shown, 'text-white')
+            if src['correct']:
+                state.iso_chosen_hash = 'correct'
+                def _out():
+                    print_terminal(UBUNTU_ISO_HASH + '  ubuntu-22.04-desktop-amd64.iso', 'text-white')
+                    _iso_add_copy_button(UBUNTU_ISO_HASH)
+                js.setTimeout(create_proxy(_out), 700)
+            else:
+                state.iso_chosen_hash = 'fake'
+                def _out_fake():
+                    print_terminal(UBUNTU_ISO_FAKE_HASH + '  ubuntu-22.04-desktop-amd64.iso', 'text-white')
+                    _iso_add_copy_button(UBUNTU_ISO_FAKE_HASH)
+                js.setTimeout(create_proxy(_out_fake), 700)
+
+        def _iso_add_copy_button(hash_val):
+            out = document.getElementById('terminal-output')
+            btn_div = document.createElement('div')
+            btn_div.className = 'mt-1 mb-1'
+            btn_div.innerHTML = (
+                "<button onclick=\"navigator.clipboard.writeText('" + hash_val + "')"
+                ".then(function(){this.innerText='\u2714 Copiato!';this.style.background='#0a6b0a';}.bind(this));"
+                "return false;\" style='background:#1a1a6e;color:#00ff00;border:1px solid #00ff00;"
+                "padding:2px 10px;font-family:monospace;font-size:12px;cursor:pointer;'>"
+                "📋 Copia hash ISO</button>"
+            )
+            out.appendChild(btn_div)
+            container = document.getElementById('terminal-output-container')
+            container.scrollTop = container.scrollHeight
+
+        def _iso_open_hash_form():
+            js.window.closeWindow('browser')
+            document.getElementById('browser-url').innerText = 'https://ubuntu.com/download/desktop#verify'
+            content_el = document.getElementById('browser-content')
+            content_el.innerHTML = (
+                "<div style='font-family:Arial,sans-serif;font-size:13px;padding:6px;'>"
+                "<div style='background:#E95420;color:white;padding:8px 12px;font-size:15px;"
+                "font-weight:bold;margin-bottom:10px;'>🧡 Verifica prima del download</div>"
+                "<p style='font-size:12px;color:#333;margin-bottom:10px;'>"
+                "Inserisci l&apos;hash SHA-256 ottenuto dalla fonte consultata."
+                " Il sistema lo confronter&agrave; con quello ufficiale.</p>"
+                "<div style='margin-bottom:8px;'>"
+                "<label style='font-size:12px;font-weight:bold;display:block;margin-bottom:4px;'>Hash SHA-256:</label>"
+                "<input id='iso-hash-input' type='text' "
+                "placeholder='Incolla qui l’hash SHA-256...' "
+                "style='width:100%;padding:5px;font-family:monospace;font-size:11px;"
+                "border:1px solid #aaa;box-sizing:border-box;'/></div>"
+                "<button id='iso-confirm-btn' style='background:#E95420;color:white;border:none;"
+                "padding:5px 16px;cursor:pointer;font-size:12px;font-family:Arial,sans-serif;"
+                "margin-right:8px;'>Scarica e verifica</button>"
+                "<div id='iso-hash-error' style='display:none;color:#b00000;font-size:11px;margin-top:6px;'>"
+                "Inserisci un hash prima di procedere.</div>"
+                "</div>"
+            )
+            js.window.openWindow('browser')
+            def on_confirm(ev):
+                val = (document.getElementById('iso-hash-input').value or '').strip().lower()
+                if not val:
+                    document.getElementById('iso-hash-error').style.display = 'block'
+                    return
+                document.getElementById('iso-hash-error').style.display = 'none'
+                _iso_verify_and_download(val)
+            pC = create_proxy(on_confirm)
+            state.proxy_refs.append(pC)
+            document.getElementById('iso-confirm-btn').onclick = pC
+
+        def _iso_verify_and_download(entered_hash):
+            js.window.closeWindow('browser')
+            # salva in stato per evitare problemi di closure in PyScript
+            state.iso_entered_hash = entered_hash.strip().lower()
+            show_alert(
+                title='📥 Download in corso...',
+                message='Scaricamento ubuntu-22.04-desktop-amd64.iso...',
+                detail='Verifica integrità SHA-256...',
+                icon='info',
+                extra_html=(
+                    "<div style='text-align:center;padding:8px;'>"
+                    "<div class='spinner' style='margin:0 auto;border-top-color:#E95420;'></div>"
+                    "<div style='margin-top:8px;font-size:11px;color:#555;'>Download in corso...</div>"
+                    "</div>"
+                ),
+                buttons=[]
+            )
+            def finish():
+                js.window.closeWindow('alert')
+                if state.iso_entered_hash == UBUNTU_ISO_HASH:
+                    _iso_success()
+                else:
+                    _iso_compromised()
+            js.setTimeout(create_proxy(finish), 2000)
+
+        def _iso_success():
+            js.window.openWindow('terminal')
+            print_terminal('', '')
+            print_terminal('✔ VERIFICA HASH: OK', 'text-green-400')
+            print_terminal('Avvio installazione Ubuntu 22.04 LTS...', 'text-yellow-400')
+            show_alert(
+                title='🧡 Installazione Ubuntu 22.04',
+                message='Hash verificato. Il file è autentico.',
+                detail='Simulazione installazione...',
+                icon='info',
+                extra_html=(
+                    "<div style='font-family:monospace;font-size:11px;background:#000;color:#0f0;padding:8px;margin-top:6px;'>"
+                    "<div>[ OK ] Verifica SHA-256...</div>"
+                    "<div>[ OK ] Decompressione immagine...</div>"
+                    "<div>[ OK ] Partizionamento disco...</div>"
+                    "<div>[ OK ] Copia file di sistema...</div>"
+                    "<div>[ OK ] Configurazione bootloader...</div>"
+                    "<div style='color:white;margin-top:4px;font-weight:bold;'>Installazione completata!</div>"
+                    "</div>"
+                ),
+                buttons=[
+                    {'label': 'Continua', 'handler': lambda: (js.window.closeWindow('alert'), _iso_complete())}
+                ]
+            )
+
+        def _iso_compromised():
+            js.window.openWindow('terminal')
+            print_terminal('', '')
+            print_terminal('✘ VERIFICA HASH: FALLITA', 'text-red-500')
+            print_terminal('Hash inserito non corrisponde. File manomesso!', 'text-red-500')
+            print_terminal('Eseguendo file compromesso...', 'text-red-500')
+            update_integrity(-25)
+            update_score(-100)
+            show_alert(
+                title='☠️ ISO MANOMESSA – MALWARE RILEVATO',
+                message="L'hash non corrisponde: il file ISO era stato modificato!",
+                detail='Malware installato nel sistema.',
+                icon='warn',
+                extra_html=(
+                    "<div style='font-family:monospace;font-size:11px;background:#000;color:#f00;padding:8px;margin-top:6px;'>"
+                    "<div class='blink'>[CRITICAL] Malware installer detected in ISO</div>"
+                    "<div>[ALERT] Rootkit installation attempt...</div>"
+                    "<div>[ALERT] Keylogger deployed...</div>"
+                    "<div>[ALERT] Backdoor aperta su porta 4444</div>"
+                    "</div>"
+                    "<div style='font-size:11px;color:#333;margin-top:6px;'>"
+                    "<b>Lezione:</b> Verifica sempre l&apos;hash da <b>ubuntu.com</b>!"
+                    "</div>"
+                ),
+                buttons=[
+                    {'label': 'Ripristina sistema', 'handler': lambda: (js.window.closeWindow('alert'), _iso_retry())}
+                ]
+            )
+
+        def _iso_retry():
+            state.iso_chosen_hash = None
+            state.iso_phase = 'browse'
+            if state.script_waiting == 'iso':
+                state.script_waiting = None
+                script_repeat_step('ISO compromessa. Riprova scegliendo la fonte corretta!')
+
+        def _iso_complete():
+            update_score(150)
+            show_notification('Ubuntu installato', 'ISO autentica. Installazione completata!', 'success')
+            if state.script_waiting == 'iso':
                 script_complete_step()
+
 
         # --- PASSWORD (INTERATTIVO) ---
 
@@ -2031,13 +2755,11 @@ Comandi Terminale utili:
                 extra_html=extra_html
             )
 
-            # init red
             for k in ['len','lower','upper','digit','symbol','spaces','common']:
                 _set_crit(f"crit-{k}", False)
 
             def suggest(ev=None):
-                # genera una password "buona" ma semplice
-                base = 'Cyb3rGuard!1998#'  # 15 chars
+                base = 'Cyb3rGuard!1998#'
                 inp = document.getElementById('pw-test-input')
                 if inp:
                     inp.value = base
@@ -2086,7 +2808,6 @@ Comandi Terminale utili:
             if btn_v:
                 btn_v.onclick = p_v
 
-            # Enter to verify
             def on_key(ev):
                 if ev.key == 'Enter':
                     verify()
@@ -2201,6 +2922,7 @@ Comandi Terminale utili:
                 print_terminal('  decrypt KEY-XXXX     - Decripta ransomware')
                 print_terminal('  block <IP>           - Blocca IP attaccante (attacco finale)')
                 print_terminal('  lockuser <utente>    - Blocca account interno (insider threat)')
+                print_terminal('  verifyiso <hash>     - Confronta un hash SHA-256 con quello ufficiale di Ubuntu')
                 print_terminal('  clear                - Pulisci schermo')
 
             elif command == 'status':
@@ -2226,6 +2948,12 @@ Comandi Terminale utili:
                     document.getElementById('last-scan').innerText = state.last_scan
                     print_terminal('Scansione completata. Minacce locali ripulite.', 'text-green-400')
                     show_notification('Scansione', 'Operazione completata.', 'success')
+
+                    if state.usb_scan_pending and state.script_waiting == 'usb':
+                        state.usb_scan_pending = False
+                        update_score(120)
+                        show_notification('USB', 'Scansione completata: USB messa in quarantena.', 'success')
+                        script_complete_step()
 
                 js.setTimeout(create_proxy(done), 1400)
 
@@ -2290,6 +3018,17 @@ Comandi Terminale utili:
                     else:
                         print_terminal('Nessuna minaccia interna corrispondente.', 'text-gray-300')
 
+
+            elif command == 'verifyiso':
+                if len(parts) < 2:
+                    print_terminal('Uso: verifyiso <hash>', 'text-red-400')
+                else:
+                    entered = parts[1].strip().lower()
+                    if entered == UBUNTU_ISO_HASH:
+                        print_terminal('✔ Hash corrispondente: il file è autentico.', 'text-green-400')
+                    else:
+                        print_terminal('✘ Hash NON corrispondente: file potenzialmente manomesso.', 'text-red-500')
+
             else:
                 print_terminal(f'Comando non riconosciuto: {command}', 'text-gray-300')
 
@@ -2325,6 +3064,12 @@ Comandi Terminale utili:
                 document.getElementById('last-scan').innerText = state.last_scan
                 show_notification('Antivirus', 'Scansione completata.', 'success')
 
+                if state.usb_scan_pending and state.script_waiting == 'usb':
+                    state.usb_scan_pending = False
+                    update_score(120)
+                    show_notification('USB', 'Scansione completata: USB messa in quarantena.', 'success')
+                    script_complete_step()
+
             js.setTimeout(create_proxy(finish), 1700)
 
         # --- END SCREENS ---
@@ -2359,10 +3104,33 @@ Comandi Terminale utili:
 
         # --- EXPOSE TO JS ---
 
+        def skip_to_iso_step():
+            """Salta direttamente allo step ISO (step 7 livello intermedio / step 8 livello avanzato).
+               Funziona solo se il gioco è attivo in modalità script e il livello è 2 o 3."""
+            if not state.game_active or not state.script_mode:
+                return
+            if state.level not in (2, 3):
+                return
+            # Determina l'indice dello step iso nella lista corrente
+            iso_idx = next((i for i, s in enumerate(state.script_steps) if s.get('kind') == 'iso'), None)
+            if iso_idx is None:
+                return
+            # Resetta eventuali lock attivi
+            js.window.__cg_alertLock = False
+            js.window.__cg_browserLock = False
+            js.window.__cg_mailLock = False
+            state.script_waiting = None
+            state.script_email_id = None
+            # Salta all'indice
+            state.script_step_idx = iso_idx
+            show_notification('DEBUG SKIP', f'Salto allo step ISO ({iso_idx + 1}).', 'info')
+            js.setTimeout(create_proxy(script_run_current_step), 300)
+
         window.startGame = start_game
         window.attemptDecrypt = attempt_decrypt
         window.runScan = run_scan
         window.showGuide = show_guide
+        js.window.skipToIsoStep = create_proxy(skip_to_iso_step)
 
         # listeners
         document.getElementById('terminal-input').addEventListener('keydown', create_proxy(on_terminal_enter))
@@ -2370,6 +3138,9 @@ Comandi Terminale utili:
         # boot
         document.getElementById('loading-overlay').classList.add('hidden')
         document.getElementById('bios-screen').classList.remove('hidden')
+        js.window.__cg_alertLock = False
+        js.window.__cg_browserLock = False
+        js.window.__cg_mailLock = False
         js.window.runBios()
 
     </script>
