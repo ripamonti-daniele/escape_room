@@ -227,6 +227,182 @@
 
         .crit-ok { color: #0a6b0a; font-weight: bold; }
         .crit-bad { color: #b00000; font-weight: bold; }
+
+        /* --- INTRO SCREEN --- */
+        #intro-screen {
+            background-color: #008080;
+        }
+
+        .intro-slide {
+            display: none;
+            animation: fadeSlide 0.4s ease;
+        }
+        .intro-slide.active {
+            display: flex;
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateX(18px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .profile-card {
+            background: #c0c0c0;
+            box-shadow: inset 1px 1px #ffffff, inset -1px -1px #000000, 1px 1px 0px #000000;
+            cursor: pointer;
+            transition: background 0.1s;
+            border: 2px solid transparent;
+        }
+        .profile-card:hover {
+            background: #d8d8d8;
+        }
+        .profile-card.selected {
+            border: 2px solid #000080;
+            background: #dde8ff;
+        }
+
+        .intro-progress-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #808080;
+            border: 1px solid #000;
+            display: inline-block;
+            margin: 0 3px;
+            transition: background 0.2s;
+        }
+        .intro-progress-dot.active {
+            background: #000080;
+        }
+
+        .threat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #fff;
+            border: 1px solid #808080;
+            box-shadow: inset 1px 1px #dfdfdf, inset -1px -1px #0a0a0a;
+            padding: 2px 8px;
+            font-size: 11px;
+            margin: 2px;
+        }
+
+        .level-recommend {
+            border: 2px dashed #000080;
+            background: #eef2ff;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: #000080;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 6px;
+        }
+
+        .typewriter-text {
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 2px solid #000;
+            animation: typing 1.4s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        @keyframes typing {
+            from { width: 0 }
+            to   { width: 100% }
+        }
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50%      { border-color: #000 }
+        }
+
+        /* --- NUOVE FEATURE INTERATTIVE --- */
+
+        /* Combo streak badge */
+        #combo-badge {
+            position: fixed;
+            top: 60px; right: 12px;
+            z-index: 500;
+            background: linear-gradient(135deg, #000080, #1084d0);
+            color: #fff;
+            font-weight: bold;
+            font-size: 13px;
+            padding: 4px 10px;
+            border: 2px solid #fff;
+            box-shadow: 2px 2px 0 #000;
+            animation: comboPop 0.35s ease;
+            display: none;
+        }
+        @keyframes comboPop {
+            0%   { transform: scale(0.5) rotate(-8deg); opacity:0; }
+            60%  { transform: scale(1.2) rotate(3deg); }
+            100% { transform: scale(1) rotate(0deg); opacity:1; }
+        }
+
+        /* Screen flash on error */
+        #screen-flash {
+            position: fixed; inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+            background: #ff0000;
+            animation: none;
+        }
+        #screen-flash.flash-red {
+            animation: flashRed 0.5s ease forwards;
+        }
+        #screen-flash.flash-green {
+            background: #00cc00;
+            animation: flashGreen 0.45s ease forwards;
+        }
+        @keyframes flashRed   { 0%{opacity:0.45} 100%{opacity:0} }
+        @keyframes flashGreen { 0%{opacity:0.35} 100%{opacity:0} }
+
+        /* Window shake */
+        @keyframes shakeWin {
+            0%,100% { transform: translateX(0); }
+            15%      { transform: translateX(-7px); }
+            30%      { transform: translateX(7px); }
+            45%      { transform: translateX(-5px); }
+            60%      { transform: translateX(5px); }
+            75%      { transform: translateX(-3px); }
+            90%      { transform: translateX(3px); }
+        }
+        .shake { animation: shakeWin 0.5s ease; }
+
+        /* XP popup floating */
+        .xp-popup {
+            position: fixed;
+            z-index: 8000;
+            font-weight: bold;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            pointer-events: none;
+            animation: xpFloat 1.4s ease forwards;
+            text-shadow: 1px 1px 0 #000;
+        }
+        @keyframes xpFloat {
+            0%   { opacity:1; transform: translateY(0) scale(1); }
+            60%  { opacity:1; transform: translateY(-40px) scale(1.1); }
+            100% { opacity:0; transform: translateY(-70px) scale(0.9); }
+        }
+
+        /* Debriefing screen */
+        #debrief-screen {
+            background: #008080;
+        }
+        .debrief-row-ok   { background: #e6ffe6; border-left: 4px solid #0a6b0a; }
+        .debrief-row-fail { background: #ffe6e6; border-left: 4px solid #b00000; }
+        .debrief-row-info { background: #e6f0ff; border-left: 4px solid #000080; }
+
+        /* Phone call popup animated */
+        @keyframes phonePulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(0,0,128,0.5); }
+            50%      { box-shadow: 0 0 0 10px rgba(0,0,128,0); }
+        }
+        .phone-ringing { animation: phonePulse 0.8s infinite; }
+
+        /* Streak fire emoji */
+        @keyframes fireSway {
+            0%,100% { transform: rotate(-5deg) scale(1); }
+            50%      { transform: rotate(5deg) scale(1.1); }
+        }
+        .fire-sway { display:inline-block; animation: fireSway 0.5s infinite; }
     </style>
 </head>
 <body class="h-screen w-screen overflow-hidden bg-[#008080]">
@@ -274,6 +450,32 @@
         </symbol>
     </svg>
 
+    <!-- SCREEN FLASH -->
+    <div id="screen-flash"></div>
+
+    <!-- COMBO BADGE -->
+    <div id="combo-badge">🔥 COMBO x<span id="combo-count">2</span></div>
+
+    <!-- DEBRIEF SCREEN -->
+    <div id="debrief-screen" class="hidden absolute inset-0 z-[210] flex flex-col items-center justify-center">
+        <div class="retro-border p-1 bg-[#c0c0c0] shadow-2xl overflow-hidden" style="width:620px; max-height:92vh; display:flex; flex-direction:column;">
+            <div class="window-header" id="debrief-header">
+                <span class="inline-flex items-center gap-2">
+                    <svg class="svg-ico" style="color:white"><use href="#ico-book"/></svg>
+                    <span id="debrief-header-title">Rapporto Finale — CyberGuard</span>
+                </span>
+                <div class="window-controls"><button onclick="location.reload()">X</button></div>
+            </div>
+            <div class="window-inner flex flex-col overflow-hidden flex-1">
+                <div class="overflow-y-auto flex-1 p-4 bg-white" id="debrief-content"></div>
+                <div class="flex gap-2 p-3 border-t border-gray-400 bg-[#c0c0c0] justify-center">
+                    <button onclick="location.reload()" class="retro-btn px-6 py-2 font-bold">🔄 Ricomincia</button>
+                    <button onclick="document.getElementById('debrief-screen').classList.add('hidden')" class="retro-btn px-6 py-2 font-bold">📋 Torna al desktop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- LOADING OVERLAY -->
     <div id="loading-overlay" class="fixed inset-0 z-[150] bg-black text-white flex flex-col items-center justify-center mono">
         <div class="spinner mb-4"></div>
@@ -284,6 +486,218 @@
     <div id="bios-screen" class="absolute inset-0 p-8 hidden">
         <div id="bios-text"></div>
         <div class="absolute bottom-8 left-8 animate-pulse">PREMI UN TASTO PER AVVIARE...</div>
+    </div>
+
+    <!-- INTRO SCREEN -->
+    <div id="intro-screen" class="absolute inset-0 z-[60] flex flex-col items-center justify-center hidden">
+
+        <!-- Finestra principale intro -->
+        <div class="retro-border p-1 bg-[#c0c0c0] shadow-2xl" style="width:560px; max-height:90vh; display:flex; flex-direction:column;">
+            <div class="window-header">
+                <span class="inline-flex items-center gap-2">
+                    <svg class="svg-ico" style="color:white"><use href="#ico-shield"/></svg>
+                    CyberGuard — Benvenuto
+                </span>
+                <div class="window-controls">
+                    <button onclick="window.skipIntro()" title="Salta intro">X</button>
+                </div>
+            </div>
+
+            <div class="window-inner flex-1 flex flex-col overflow-hidden">
+
+                <!-- Slide 1: Titolo + Missione -->
+                <div id="intro-slide-1" class="intro-slide active flex-col items-center justify-center p-6 gap-4 text-center" style="min-height:340px;">
+                    <div style="font-size:54px; line-height:1;">🛡️</div>
+                    <h1 class="text-2xl font-bold text-gray-900" style="font-family:Tahoma,sans-serif;">CyberGuard</h1>
+                    <p class="typewriter-text text-sm font-bold text-gray-800 mono mx-auto" style="max-width:360px;">Simulatore di Sicurezza Informatica</p>
+                    <div class="retro-border-inset bg-white p-3 text-left text-sm text-gray-800 w-full mt-2" style="line-height:1.6;">
+                        Benvenuto nella simulazione <b>più realistica</b> di minacce informatiche in stile Windows 98.<br><br>
+                        Il tuo obiettivo: <b>proteggere il sistema aziendale</b> riconoscendo attacchi reali —
+                        phishing, ransomware, malware, insider threat e molto altro.<br><br>
+                        Ogni scelta ha conseguenze. Ogni errore costa punti integrità. <b>Sei pronto?</b>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-1">⚠️ Tutti gli scenari sono <b>simulati a scopo didattico</b>.</div>
+                </div>
+
+                <!-- Slide 2: Chi sei? Profili utente -->
+                <div id="intro-slide-2" class="intro-slide flex-col p-5 gap-3" style="min-height:340px;">
+                    <div class="text-base font-bold text-gray-900 mb-1">👤 Chi sei? Scegli il tuo profilo</div>
+                    <div class="text-xs text-gray-700 mb-2">Ti consigliamo il livello più adatto a te. Clicca sul profilo che ti rappresenta.</div>
+
+                    <div class="grid grid-cols-1 gap-2" id="profile-cards">
+
+                        <div class="profile-card p-3 flex items-start gap-3" onclick="window.selectProfile('novice')" id="profile-novice">
+                            <div style="font-size:28px; line-height:1; flex-shrink:0;">🧑‍💼</div>
+                            <div>
+                                <div class="font-bold text-sm">Utente comune / Nessuna esperienza IT</div>
+                                <div class="text-xs text-gray-700 mt-1">Usi PC per lavoro o uso personale ma non ti occupi di sicurezza. Vuoi imparare le basi.</div>
+                                <div class="level-recommend">→ Consigliato: LIVELLO 1 — Principiante</div>
+                            </div>
+                        </div>
+
+                        <div class="profile-card p-3 flex items-start gap-3" onclick="window.selectProfile('student')" id="profile-student">
+                            <div style="font-size:28px; line-height:1; flex-shrink:0;">🎓</div>
+                            <div>
+                                <div class="font-bold text-sm">Studente IT / Appassionato di tecnologia</div>
+                                <div class="text-xs text-gray-700 mt-1">Conosci le basi della rete e del software. Hai sentito parlare di phishing e malware.</div>
+                                <div class="level-recommend">→ Consigliato: LIVELLO 2 — Intermedio</div>
+                            </div>
+                        </div>
+
+                        <div class="profile-card p-3 flex items-start gap-3" onclick="window.selectProfile('pro')" id="profile-pro">
+                            <div style="font-size:28px; line-height:1; flex-shrink:0;">💻</div>
+                            <div>
+                                <div class="font-bold text-sm">Professionista IT / Sistemista / Sviluppatore</div>
+                                <div class="text-xs text-gray-700 mt-1">Lavori in ambito tecnico. Conosci i concetti di sicurezza e vuoi mettere alla prova le tue competenze.</div>
+                                <div class="level-recommend">→ Consigliato: LIVELLO 3 — Avanzato</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Slide 3: Minacce che incontrerai -->
+                <div id="intro-slide-3" class="intro-slide flex-col p-5 gap-3" style="min-height:340px;">
+                    <div class="text-base font-bold text-gray-900 mb-1">⚠️ Le minacce che incontrerai</div>
+                    <div class="text-xs text-gray-700 mb-2">CyberGuard simula attacchi reali usati ogni giorno contro aziende e privati.</div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs" id="threat-grid">
+                        <div class="retro-border p-2 bg-white">
+                            <div class="font-bold text-red-800 mb-1">📧 Phishing &amp; Spear Phishing</div>
+                            <div class="text-gray-700">Email false che imitano mittenti affidabili per rubare credenziali o dati.</div>
+                        </div>
+                        <div class="retro-border p-2 bg-white">
+                            <div class="font-bold text-red-800 mb-1">🔒 Ransomware</div>
+                            <div class="text-gray-700">Malware che cifra i tuoi file e chiede un riscatto per la chiave di decrittazione.</div>
+                        </div>
+                        <div class="retro-border p-2 bg-white">
+                            <div class="font-bold text-red-800 mb-1">🌐 Siti clone &amp; MitM</div>
+                            <div class="text-gray-700">Siti identici a quelli legittimi e attacchi Man-in-the-Middle che intercettano le comunicazioni.</div>
+                        </div>
+                        <div class="retro-border p-2 bg-white">
+                            <div class="font-bold text-red-800 mb-1">💾 USB Trojan</div>
+                            <div class="text-gray-700">Chiavette USB abbandonate che installano malware non appena vengono collegate.</div>
+                        </div>
+                        <div class="retro-border p-2 bg-white">
+                            <div class="font-bold text-red-800 mb-1">👤 Insider Threat</div>
+                            <div class="text-gray-700">Un dipendente interno che accede a dati riservati o sabota il sistema.</div>
+                        </div>
+                        <div class="retro-border p-2 bg-white">
+                            <div class="font-bold text-red-800 mb-1">⛏️ Cryptojacking &amp; Zero-day</div>
+                            <div class="text-gray-700">Script nascosti che usano la tua CPU per mining e vulnerabilità non ancora patchate.</div>
+                        </div>
+                    </div>
+
+                    <div class="retro-border-inset bg-white p-2 text-xs text-gray-800 mt-1">
+                        💡 <b>Suggerimento:</b> In ogni step troverai indizi visivi. Analizza sempre prima di agire.
+                    </div>
+                </div>
+
+                <!-- Slide 4: Come si gioca -->
+                <div id="intro-slide-4" class="intro-slide flex-col p-5 gap-3" style="min-height:340px;">
+                    <div class="text-base font-bold text-gray-900 mb-1">🎮 Come si gioca</div>
+
+                    <div class="flex flex-col gap-2 text-sm">
+                        <div class="flex items-start gap-3">
+                            <div class="retro-border w-8 h-8 flex items-center justify-center font-bold text-base flex-shrink-0">1</div>
+                            <div><b>Leggi il README</b> — si apre automaticamente all'inizio. Contiene le istruzioni specifiche del livello scelto.</div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="retro-border w-8 h-8 flex items-center justify-center font-bold text-base flex-shrink-0">2</div>
+                            <div><b>Segui gli step in ordine</b> — le minacce arrivano una alla volta. L'obiettivo corrente è sempre visibile in alto a sinistra.</div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="retro-border w-8 h-8 flex items-center justify-center font-bold text-base flex-shrink-0">3</div>
+                            <div><b>Usa le app sul desktop</b> — Posta, Browser, Terminale, Antivirus. Ogni step richiede l'app giusta.</div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="retro-border w-8 h-8 flex items-center justify-center font-bold text-base flex-shrink-0">4</div>
+                            <div><b>Non perdere integrità</b> — ogni errore riduce la barra. Se scende a zero è game over.</div>
+                        </div>
+                    </div>
+
+                    <div class="retro-border p-3 bg-white mt-2 text-xs">
+                        <div class="font-bold mb-1">📊 Sistema di punteggio</div>
+                        <div class="flex gap-4">
+                            <div><span class="crit-ok">+120</span> scelta corretta</div>
+                            <div><span class="crit-ok">+80</span> analisi completata</div>
+                            <div><span class="crit-bad">-60</span> scelta sbagliata</div>
+                            <div><span class="crit-bad">-18</span> integrità persa</div>
+                        </div>
+                    </div>
+
+                    <div class="retro-border-inset bg-white p-2 text-xs text-center font-bold text-blue-900 mt-1" id="intro-profile-recap">
+                        <!-- Popolato da JS in base al profilo scelto -->
+                        Scegli il tuo profilo nella slide precedente per vedere il consiglio personalizzato.
+                    </div>
+                </div>
+
+                <!-- Slide 5: Selezione livello finale -->
+                <div id="intro-slide-5" class="intro-slide flex-col items-center p-5 gap-3" style="min-height:340px;">
+                    <div class="text-base font-bold text-gray-900 mb-1 text-center">🚀 Scegli il livello e inizia</div>
+                    <div class="text-xs text-gray-700 mb-2 text-center">Il livello consigliato per il tuo profilo è evidenziato.</div>
+
+                    <div class="flex flex-col gap-3 w-full" id="level-buttons-intro">
+
+                        <div id="intro-level-basic" class="retro-border p-3 bg-[#c0c0c0] cursor-pointer hover:bg-gray-200" onclick="window.startGame('basic')" style="border-left: 4px solid #0a6b0a;">
+                            <div class="flex items-center justify-between">
+                                <span class="inline-flex items-center gap-2 font-bold text-green-900">
+                                    <svg class="svg-ico" style="color:#0a6b0a"><use href="#ico-check"/></svg>
+                                    LIVELLO 1 — PRINCIPIANTE
+                                </span>
+                                <span id="badge-basic" class="text-xs bg-green-200 border border-green-600 px-2 py-0.5 font-bold hidden">✓ Consigliato</span>
+                            </div>
+                            <div class="text-xs text-gray-700 mt-1">6 step · Phishing, pop-up fake, download sospetti, WiFi pubblico</div>
+                        </div>
+
+                        <div id="intro-level-intermediate" class="retro-border p-3 bg-[#c0c0c0] cursor-pointer hover:bg-gray-200" onclick="window.startGame('intermediate')" style="border-left: 4px solid #8a6b00;">
+                            <div class="flex items-center justify-between">
+                                <span class="inline-flex items-center gap-2 font-bold text-yellow-800">
+                                    <svg class="svg-ico" style="color:#8a6b00"><use href="#ico-warning"/></svg>
+                                    LIVELLO 2 — INTERMEDIO
+                                </span>
+                                <span id="badge-intermediate" class="text-xs bg-yellow-100 border border-yellow-600 px-2 py-0.5 font-bold hidden">✓ Consigliato</span>
+                            </div>
+                            <div class="text-xs text-gray-700 mt-1">7 step · Spear phishing, siti clone, USB trojan, MitM, session hijacking</div>
+                        </div>
+
+                        <div id="intro-level-expert" class="retro-border p-3 bg-[#c0c0c0] cursor-pointer hover:bg-gray-200" onclick="window.startGame('expert')" style="border-left: 4px solid #b00000;">
+                            <div class="flex items-center justify-between">
+                                <span class="inline-flex items-center gap-2 font-bold text-red-800">
+                                    <svg class="svg-ico" style="color:#b00000"><use href="#ico-skull"/></svg>
+                                    LIVELLO 3 — AVANZATO
+                                </span>
+                                <span id="badge-expert" class="text-xs bg-red-100 border border-red-600 px-2 py-0.5 font-bold hidden">✓ Consigliato</span>
+                            </div>
+                            <div class="text-xs text-gray-700 mt-1">8 step · CEO fraud, supply chain, ransomware, insider threat, attacco finale</div>
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-gray-600 text-center mt-1">Puoi sempre ricominciare scegliendo un livello diverso.</div>
+                </div>
+
+                <!-- Nav bar inferiore -->
+                <div class="flex items-center justify-between px-4 py-2 border-t border-gray-400 bg-[#c0c0c0] flex-shrink-0">
+                    <button id="intro-btn-back" class="retro-btn px-4 py-1 text-sm font-bold" onclick="window.introNav(-1)">◀ Indietro</button>
+
+                    <div id="intro-dots" class="flex items-center gap-1">
+                        <div class="intro-progress-dot active" id="dot-1"></div>
+                        <div class="intro-progress-dot" id="dot-2"></div>
+                        <div class="intro-progress-dot" id="dot-3"></div>
+                        <div class="intro-progress-dot" id="dot-4"></div>
+                        <div class="intro-progress-dot" id="dot-5"></div>
+                    </div>
+
+                    <button id="intro-btn-next" class="retro-btn px-4 py-1 text-sm font-bold" onclick="window.introNav(1)">Avanti ▶</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Piccola nota sotto la finestra -->
+        <div class="text-xs text-white mt-3 opacity-70" onclick="window.skipIntro()" style="cursor:pointer; text-shadow: 1px 1px 1px black;">
+            [ Salta introduzione ]
+        </div>
     </div>
 
     <!-- START SCREEN / DIFFICULTY SELECT -->
@@ -969,6 +1383,333 @@
             window.closeWindow('alert');
         };
 
+        // --- INTRO SCREEN LOGIC ---
+
+        let introCurrentSlide = 1;
+        const introTotalSlides = 5;
+        let introSelectedProfile = null;
+
+        const profileLevelMap = {
+            novice:  'basic',
+            student: 'intermediate',
+            pro:     'expert'
+        };
+        const profileMessages = {
+            novice:  '🧑‍💼 Per te consigliamo il Livello 1 — Principiante. Imparerai le basi del riconoscimento delle minacce più comuni.',
+            student: '🎓 Per te consigliamo il Livello 2 — Intermedio. Metterai alla prova le tue conoscenze su attacchi più sofisticati.',
+            pro:     '💻 Per te consigliamo il Livello 3 — Avanzato. Affronterai scenari reali da SOC analyst con terminale e analisi forense.'
+        };
+
+        window.selectProfile = function(profile) {
+            introSelectedProfile = profile;
+            // Aggiorna visual cards
+            ['novice','student','pro'].forEach(p => {
+                document.getElementById('profile-' + p).classList.remove('selected');
+            });
+            document.getElementById('profile-' + profile).classList.add('selected');
+        };
+
+        function introUpdateBadges() {
+            ['basic','intermediate','expert'].forEach(l => {
+                const b = document.getElementById('badge-' + l);
+                if (b) b.classList.add('hidden');
+            });
+            if (!introSelectedProfile) return;
+            const recommended = profileLevelMap[introSelectedProfile];
+            const badge = document.getElementById('badge-' + recommended);
+            if (badge) badge.classList.remove('hidden');
+        }
+
+        function introUpdateRecap() {
+            const el = document.getElementById('intro-profile-recap');
+            if (!el) return;
+            if (introSelectedProfile && profileMessages[introSelectedProfile]) {
+                el.innerText = profileMessages[introSelectedProfile];
+            } else {
+                el.innerText = 'Torna alla slide precedente e scegli il tuo profilo per ricevere un consiglio personalizzato.';
+            }
+        }
+
+        function introShowSlide(n) {
+            for (let i = 1; i <= introTotalSlides; i++) {
+                const s = document.getElementById('intro-slide-' + i);
+                const d = document.getElementById('dot-' + i);
+                if (s) s.classList.toggle('active', i === n);
+                if (d) d.classList.toggle('active', i === n);
+            }
+
+            // Bottoni nav
+            const btnBack = document.getElementById('intro-btn-back');
+            const btnNext = document.getElementById('intro-btn-next');
+            if (btnBack) btnBack.style.visibility = (n === 1) ? 'hidden' : 'visible';
+            if (btnNext) {
+                if (n === introTotalSlides) {
+                    btnNext.style.visibility = 'hidden';
+                } else {
+                    btnNext.style.visibility = 'visible';
+                    btnNext.innerText = (n === introTotalSlides - 1) ? 'Inizia ▶' : 'Avanti ▶';
+                }
+            }
+
+            // Aggiornamenti specifici per slide
+            if (n === 4) introUpdateRecap();
+            if (n === 5) introUpdateBadges();
+        }
+
+        window.introNav = function(dir) {
+            introCurrentSlide = Math.min(Math.max(1, introCurrentSlide + dir), introTotalSlides);
+            introShowSlide(introCurrentSlide);
+        };
+
+        window.skipIntro = function() {
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('start-screen').classList.add('flex');
+        };
+
+        window.showIntro = function() {
+            introCurrentSlide = 1;
+            introSelectedProfile = null;
+            introShowSlide(1);
+            document.getElementById('intro-screen').classList.remove('hidden');
+            document.getElementById('intro-screen').classList.add('flex');
+        };
+
+        // Keyboard support per l'intro (frecce sinistra/destra)
+        document.addEventListener('keydown', function(e) {
+            const intro = document.getElementById('intro-screen');
+            if (!intro || intro.classList.contains('hidden')) return;
+            if (e.key === 'ArrowRight') window.introNav(1);
+            if (e.key === 'ArrowLeft')  window.introNav(-1);
+            if (e.key === 'Escape')     window.skipIntro();
+        });
+
+        // =============================================
+        // NUOVE FEATURE INTERATTIVE
+        // =============================================
+
+        // --- 8-BIT SOUND ENGINE (Web Audio API) ---
+        let _audioCtx = null;
+        function getAudioCtx() {
+            if (!_audioCtx) {
+                try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+            }
+            return _audioCtx;
+        }
+        function playTone(freq, dur, type='square', vol=0.12) {
+            const ctx = getAudioCtx();
+            if (!ctx) return;
+            try {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(vol, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + dur);
+            } catch(e) {}
+        }
+        window.sfxCorrect = function() {
+            playTone(523, 0.08); setTimeout(()=>playTone(659,0.08),90); setTimeout(()=>playTone(784,0.15),180);
+        };
+        window.sfxWrong = function() {
+            playTone(220, 0.1,'sawtooth',0.15); setTimeout(()=>playTone(180,0.15,'sawtooth',0.15),110);
+        };
+        window.sfxMail = function() {
+            playTone(880,0.06); setTimeout(()=>playTone(1047,0.1),80);
+        };
+        window.sfxAlert = function() {
+            playTone(440,0.1,'sawtooth'); setTimeout(()=>playTone(440,0.1,'sawtooth'),200); setTimeout(()=>playTone(440,0.15,'sawtooth'),400);
+        };
+        window.sfxLevelUp = function() {
+            [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,0.18),i*120));
+        };
+        window.sfxCombo = function(n) {
+            const freqs=[659,784,880,1047,1319];
+            const f = freqs[Math.min(n-2, freqs.length-1)];
+            playTone(f, 0.08); setTimeout(()=>playTone(f*1.25,0.14),90);
+        };
+        window.sfxGameOver = function() {
+            [440,330,220,110].forEach((f,i)=>setTimeout(()=>playTone(f,0.2,'sawtooth',0.18),i*160));
+        };
+        window.sfxPhone = function() {
+            let t = 0;
+            for(let i=0;i<3;i++){
+                setTimeout(()=>{ playTone(480,0.2,'sine',0.1); setTimeout(()=>playTone(620,0.2,'sine',0.1),220); },t);
+                t += 700;
+            }
+        };
+
+        // --- SCREEN FLASH ---
+        window.flashScreen = function(type='red') {
+            const el = document.getElementById('screen-flash');
+            if (!el) return;
+            el.classList.remove('flash-red','flash-green');
+            void el.offsetWidth; // reflow
+            el.classList.add(type === 'green' ? 'flash-green' : 'flash-red');
+        };
+
+        // --- WINDOW SHAKE ---
+        window.shakeWindow = function(app) {
+            const win = document.getElementById(`window-${app}`);
+            if (!win) return;
+            win.classList.remove('shake');
+            void win.offsetWidth;
+            win.classList.add('shake');
+            setTimeout(()=>win.classList.remove('shake'), 600);
+        };
+
+        // --- XP FLOATING POPUP ---
+        window.showXpPopup = function(points, x, y) {
+            const el = document.createElement('div');
+            el.className = 'xp-popup';
+            el.style.left = (x || window.innerWidth/2 - 30) + 'px';
+            el.style.top  = (y || window.innerHeight/2) + 'px';
+            el.style.color = points > 0 ? '#00cc00' : '#ff2200';
+            el.innerText = (points > 0 ? '+' : '') + points + ' pt';
+            document.body.appendChild(el);
+            setTimeout(()=>el.remove(), 1500);
+        };
+
+        // --- COMBO STREAK ---
+        let _comboCount = 0;
+        let _comboTimer = null;
+        window.registerCombo = function(correct) {
+            if (!correct) {
+                _comboCount = 0;
+                clearTimeout(_comboTimer);
+                document.getElementById('combo-badge').style.display = 'none';
+                return;
+            }
+            _comboCount++;
+            clearTimeout(_comboTimer);
+            if (_comboCount >= 2) {
+                const badge = document.getElementById('combo-badge');
+                document.getElementById('combo-count').innerText = _comboCount;
+                badge.style.display = 'block';
+                window.sfxCombo(_comboCount);
+                // fire emoji on high combo
+                if (_comboCount >= 4) badge.innerHTML = `<span class="fire-sway">🔥</span> COMBO x${_comboCount}!`;
+                else badge.innerHTML = `🔥 COMBO x<span id="combo-count">${_comboCount}</span>`;
+                _comboTimer = setTimeout(()=>{ badge.style.display='none'; _comboCount=0; }, 3500);
+            }
+        };
+
+        // --- DEBRIEFING ENGINE ---
+        window._debriefLog = [];   // array di {step, kind, correct, detail, tip}
+        window.logDebriefStep = function(step, kind, correct, detail, tip) {
+            window._debriefLog.push({step, kind, correct, detail, tip});
+        };
+
+        window.showDebrief = function(won, finalScore, integrity) {
+            const log = window._debriefLog;
+            const correct = log.filter(x=>x.correct).length;
+            const total   = log.length;
+            const pct     = total > 0 ? Math.round(correct/total*100) : 100;
+
+            // Titolo e colore header
+            const header = document.getElementById('debrief-header');
+            const title  = document.getElementById('debrief-header-title');
+            if (won) {
+                header.style.background = 'linear-gradient(90deg,#005500,#00aa00)';
+                title.innerText = '🏆 MISSIONE COMPIUTA — Rapporto Finale';
+            } else {
+                header.style.background = 'linear-gradient(90deg,#800000,#cc0000)';
+                title.innerText = '💀 SISTEMA COMPROMESSO — Rapporto Finale';
+            }
+
+            // Valutazione globale
+            let grade, gradeColor, gradeMsg;
+            if (pct >= 90)      { grade='S'; gradeColor='#000080'; gradeMsg='Esperto di sicurezza. Nessuna minaccia ti ha fermato.'; }
+            else if (pct >= 75) { grade='A'; gradeColor='#0a6b0a'; gradeMsg='Ottimo: hai riconosciuto quasi tutti gli attacchi.'; }
+            else if (pct >= 55) { grade='B'; gradeColor='#8a6b00'; gradeMsg='Buono: qualche incertezza, ma il sistema regge.'; }
+            else if (pct >= 35) { grade='C'; gradeColor='#b05000'; gradeMsg='Sufficiente: parecchi errori. Riprova con più attenzione.'; }
+            else                { grade='D'; gradeColor='#b00000'; gradeMsg='Sistema a rischio. Studia gli indizi e riprova!'; }
+
+            // Titoli step human-readable
+            const kindLabel = {
+                email:'📧 Analisi Email', popup:'🖥️ Pop-up Fake', web:'🌐 Navigazione Web',
+                password:'🔑 Password', wifi:'📶 WiFi Pubblico', phone:'📞 Telefonata Social Eng.',
+                usb:'💾 USB Trojan', mitm:'🔐 Certificato MitM', session:'🍪 Session Hijacking',
+                insider:'👤 Insider Threat', ransomware:'🔒 Ransomware', iso:'🧡 Verifica ISO',
+                final:'⚠️ Attacco Finale'
+            };
+
+            // Genera righe
+            let rowsHtml = '';
+            if (log.length === 0) {
+                rowsHtml = "<div class='text-gray-500 text-sm p-4'>Nessun dato disponibile per questo livello.</div>";
+            } else {
+                log.forEach((entry, i) => {
+                    const cls  = entry.correct ? 'debrief-row-ok' : 'debrief-row-fail';
+                    const icon = entry.correct ? '✅' : '❌';
+                    const lab  = kindLabel[entry.kind] || entry.kind;
+                    rowsHtml += `
+                    <div class="${cls} p-2 mb-2 text-xs rounded-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold">${icon} Step ${entry.step}: ${lab}</span>
+                            <span class="${entry.correct ? 'crit-ok' : 'crit-bad'}">${entry.correct ? 'CORRETTO' : 'ERRORE'}</span>
+                        </div>
+                        ${entry.detail ? `<div class="text-gray-700 mt-1">${entry.detail}</div>` : ''}
+                        ${entry.tip    ? `<div class="mt-1 italic text-blue-800">💡 ${entry.tip}</div>` : ''}
+                    </div>`;
+                });
+            }
+
+            // Sezione "cosa imparare"
+            const failedKinds = [...new Set(log.filter(x=>!x.correct).map(x=>x.kind))];
+            const learnMap = {
+                email:    'Le email di phishing usano urgenza, errori grammaticali e domini falsi. Verifica sempre il mittente.',
+                popup:    'I pop-up "premio" sono sempre truffe. Chiudi senza cliccare, mai inserire dati.',
+                web:      'Controlla sempre HTTPS, il dominio esatto e l\'estensione del file prima di scaricare.',
+                password: 'Una password robusta ha almeno 12 caratteri, maiuscole, numeri e simboli.',
+                wifi:     'Il WiFi pubblico OPEN non cifra i dati. Usa sempre VPN o hotspot personale.',
+                phone:    'Il vero supporto tecnico non chiama mai chiedendo accesso remoto o password.',
+                usb:      'Non collegare mai USB trovate. Possono installare malware automaticamente.',
+                mitm:     'Un certificato non valido è un campanello d\'allarme: annulla sempre la connessione.',
+                session:  'Termina sempre le sessioni su reti non fidate per evitare il furto dei cookie.',
+                insider:  'Monitora gli accessi anomali: un account interno può essere il vettore di attacco più pericoloso.',
+                ransomware:'Fai sempre backup offline. Leggi i log di sistema per trovare la chiave di decrittazione.',
+                iso:      'Verifica sempre l\'hash SHA-256 di un ISO scaricato, confrontandolo con quello del sito ufficiale.',
+                final:    'Blocca subito gli IP attaccanti. Ogni secondo di ritardo riduce l\'integrità del sistema.'
+            };
+            let learnHtml = '';
+            if (failedKinds.length > 0) {
+                learnHtml = `<div class="debrief-row-info p-3 mb-3 text-xs">
+                    <div class="font-bold mb-2">📚 Cosa ripassare:</div>`;
+                failedKinds.forEach(k => {
+                    if (learnMap[k]) learnHtml += `<div class="mb-1">• <b>${kindLabel[k]||k}:</b> ${learnMap[k]}</div>`;
+                });
+                learnHtml += '</div>';
+            }
+
+            document.getElementById('debrief-content').innerHTML = `
+                <!-- Score card -->
+                <div class="flex items-center gap-4 p-3 mb-4 retro-border bg-[#c0c0c0]">
+                    <div style="font-size:52px;line-height:1;font-weight:bold;color:${gradeColor};font-family:'Courier New',monospace;">${grade}</div>
+                    <div class="flex-1">
+                        <div class="font-bold text-base">${gradeMsg}</div>
+                        <div class="text-xs text-gray-700 mt-1">
+                            Step corretti: <b>${correct}/${total}</b> (${pct}%) &nbsp;|&nbsp;
+                            Punteggio finale: <b>${finalScore}</b> pt &nbsp;|&nbsp;
+                            Integrità rimasta: <b>${integrity}%</b>
+                        </div>
+                    </div>
+                </div>
+                ${learnHtml}
+                <!-- Step by step -->
+                <div class="font-bold text-sm mb-2 border-b border-gray-300 pb-1">📋 Riepilogo step per step:</div>
+                ${rowsHtml}
+                <div class="text-xs text-gray-500 text-center mt-3">
+                    CyberGuard — Simulatore di Sicurezza Informatica — Scopo didattico
+                </div>
+            `;
+
+            document.getElementById('debrief-screen').classList.remove('hidden');
+        };
+
         window.runBios = function() {
             const biosText = document.getElementById('bios-text');
             biosText.innerHTML = '';
@@ -993,8 +1734,7 @@
                     clearInterval(interval);
                     setTimeout(() => {
                         document.getElementById('bios-screen').classList.add('hidden');
-                        document.getElementById('start-screen').classList.remove('hidden');
-                        document.getElementById('start-screen').classList.add('flex');
+                        window.showIntro();
                     }, 800);
                 }
             }, 420);
@@ -1335,6 +2075,23 @@ Comandi Terminale utili:
         def update_score(points):
             state.score += points
             document.getElementById('score-display').innerText = str(state.score)
+            # XP popup al centro dello schermo
+            try:
+                js.window.showXpPopup(points, 0, 0)
+            except Exception:
+                pass
+            # suono e flash
+            try:
+                if points > 0:
+                    js.window.sfxCorrect()
+                    js.window.flashScreen('green')
+                    js.window.registerCombo(True)
+                elif points < -30:
+                    js.window.sfxWrong()
+                    js.window.flashScreen('red')
+                    js.window.registerCombo(False)
+            except Exception:
+                pass
 
         def update_clock():
             now = datetime.datetime.now()
@@ -1613,6 +2370,10 @@ Comandi Terminale utili:
                 state.script_waiting = 'email'
                 js.window.__cg_mailLock = True
                 show_notification('Nuova Email', e['subject'], 'info')
+                try:
+                    js.window.sfxMail()
+                except Exception:
+                    pass
                 # porta in primo piano la Posta per rendere lo step più immediato
                 js.window.openWindow('mail')
 
@@ -1727,8 +2488,16 @@ Comandi Terminale utili:
 
             reset_state_for_new_game()
 
+            # reset debrief log e combo
+            try:
+                js.window._debriefLog.length = 0
+            except Exception:
+                pass
+
             document.getElementById('start-screen').classList.add('hidden')
             document.getElementById('start-screen').classList.remove('flex')
+            document.getElementById('intro-screen').classList.add('hidden')
+            document.getElementById('intro-screen').classList.remove('flex')
             document.getElementById('desktop').classList.remove('hidden')
 
             # close everything and open ONLY README
@@ -1974,6 +2743,13 @@ Comandi Terminale utili:
 
             # modalità lineare: avanza SOLO se corretto, altrimenti ripeti lo step (stesso template)
             if state.script_waiting == 'email' and state.script_email_id == email_id:
+                # log per debriefing
+                try:
+                    tip = email.get('reason', '')
+                    detail = f"Email: «{email.get('subject','')}» da {email.get('sender','')}"
+                    js.window.logDebriefStep(state.script_step_idx, 'email', correct, detail, tip)
+                except Exception:
+                    pass
                 if correct:
                     script_complete_step()
                 else:
@@ -2107,12 +2883,21 @@ Comandi Terminale utili:
                 show_notification('Scelta corretta', 'Hai scelto una fonte più sicura.', 'success')
                 if scenario['title'].lower().startswith('sito http'):
                     state.session_at_risk = False
+                try:
+                    js.window.logDebriefStep(state.script_step_idx, 'web', True, f"Scenario: {scenario['title']}", 'Controlla sempre HTTPS e il dominio esatto.')
+                except Exception:
+                    pass
                 if state.script_waiting == 'web':
                     script_complete_step()
             else:
                 update_score(-60)
                 update_integrity(-18)
                 show_notification('Scelta rischiosa', scenario.get('unsafe_reason', 'Sito non sicuro.'), 'error')
+                try:
+                    js.window.logDebriefStep(state.script_step_idx, 'web', False, f"Scenario: {scenario['title']} — scelto sito non sicuro", scenario.get('unsafe_reason',''))
+                    js.window.shakeWindow('browser')
+                except Exception:
+                    pass
 
                 t = scenario['title'].lower()
                 if 'sito http' in t:
@@ -2159,6 +2944,12 @@ Comandi Terminale utili:
                 update_integrity(-18)
                 update_score(-50)
                 show_notification('Truffa', 'Hai cliccato un pop-up fake.', 'error')
+                try:
+                    js.window.logDebriefStep(state.script_step_idx, 'popup', False,
+                        'Hai cliccato "Riscatta" su un pop-up fake.',
+                        'I pop-up "premio" sono sempre truffe. Chiudi senza cliccare mai.')
+                except Exception:
+                    pass
                 if state.script_waiting == 'popup':
                     state.script_waiting = None
                     script_repeat_step('Dovevi chiudere il pop-up senza riscattare.')
@@ -2167,6 +2958,12 @@ Comandi Terminale utili:
                 js.window.closeWindow('alert')
                 update_score(60)
                 show_notification('OK', 'Pop-up ignorato correttamente.', 'success')
+                try:
+                    js.window.logDebriefStep(state.script_step_idx, 'popup', True,
+                        'Hai chiuso il pop-up senza cliccare.',
+                        'Ottima pratica: ignora sempre i pop-up non richiesti.')
+                except Exception:
+                    pass
                 if state.script_waiting == 'popup':
                     script_complete_step()
 
@@ -2216,6 +3013,12 @@ Comandi Terminale utili:
                 update_integrity(-12)
                 update_score(-20)
                 show_notification('Rete aperta', 'Connesso a WiFi OPEN: rischio aumentato.', 'error')
+                try:
+                    js.window.logDebriefStep(state.script_step_idx, 'wifi', False,
+                        'Connesso a WiFi OPEN pubblico non protetto.',
+                        'Il WiFi OPEN non cifra i dati: usa sempre hotspot personale o VPN.')
+                except Exception:
+                    pass
                 if state.script_waiting == 'wifi':
                     state.script_waiting = None
                     script_repeat_step('Per continuare evita la rete OPEN. Scegli Hotspot o Ignora.')
@@ -2224,6 +3027,12 @@ Comandi Terminale utili:
                 state.on_public_wifi = False
                 update_score(80)
                 show_notification('Scelta sicura', 'Hotspot attivato (connessione più sicura).', 'success')
+                try:
+                    js.window.logDebriefStep(state.script_step_idx, 'wifi', True,
+                        'Hai usato hotspot personale invece del WiFi OPEN.',
+                        'Hotspot o VPN sono sempre preferibili a reti aperte.')
+                except Exception:
+                    pass
                 if state.script_waiting == 'wifi':
                     script_complete_step()
 
@@ -2231,6 +3040,12 @@ Comandi Terminale utili:
                 state.on_public_wifi = False
                 update_score(60)
                 show_notification('Scelta sicura', 'WiFi pubblico evitato.', 'success')
+                try:
+                    js.window.logDebriefStep(state.script_step_idx, 'wifi', True,
+                        'Hai evitato il WiFi pubblico non protetto.',
+                        'Ottima scelta: evitare reti aperte riduce il rischio di intercettazione.')
+                except Exception:
+                    pass
                 if state.script_waiting == 'wifi':
                     script_complete_step()
 
@@ -2253,6 +3068,12 @@ Comandi Terminale utili:
                 update_integrity(-22)
                 update_score(-60)
                 show_notification('USB Trojan', 'Esecuzione sospetta rilevata.', 'error')
+                try:
+                    js.window.logDebriefStep(state.script_step_idx, 'usb', False,
+                        'Hai aperto i file della USB sconosciuta.',
+                        'Non aprire mai file da USB trovate: possono contenere autorun malware.')
+                except Exception:
+                    pass
                 if state.script_waiting == 'usb':
                     state.script_waiting = None
                     script_repeat_step('Hai aperto la USB: riprova scegliendo scansione o consegna IT.')
@@ -2261,6 +3082,12 @@ Comandi Terminale utili:
                 js.window.closeWindow('alert')
                 update_score(110)
                 show_notification('Ottimo', 'USB consegnata al reparto IT.', 'success')
+                try:
+                    js.window.logDebriefStep(state.script_step_idx, 'usb', True,
+                        'Hai consegnato la USB all\'IT senza aprirla.',
+                        'La procedura corretta è sempre: non aprire, scansionare o consegnare all\'IT.')
+                except Exception:
+                    pass
                 if state.script_waiting == 'usb':
                     script_complete_step()
 
@@ -2290,91 +3117,165 @@ Comandi Terminale utili:
         # --- PHONE (PIÙ INTERATTIVO: checklist verifica) ---
 
         def trigger_phone_support():
-            extra_html = """
-                <div class='text-[11px] text-gray-800'>
-                    <div class='font-bold mb-1'>Checklist verifica identità (scegli almeno 2):</div>
-                    <div class='space-y-1'>
-                        <label class='flex items-start gap-2'><input id='phk1' type='checkbox' class='mt-0.5'/> Chiedi ID ticket / motivo dettagliato</label>
-                        <label class='flex items-start gap-2'><input id='phk2' type='checkbox' class='mt-0.5'/> Richiama su numero ufficiale (directory)</label>
-                        <label class='flex items-start gap-2'><input id='phk3' type='checkbox' class='mt-0.5'/> Richiedi email di conferma da dominio aziendale</label>
-                        <label class='flex items-start gap-2'><input id='phk4' type='checkbox' class='mt-0.5'/> Verifica con il tuo responsabile</label>
-                    </div>
-                    <div class='mt-2'>
-                        <div class='font-bold text-[11px]'>Numero ufficiale (directory):</div>
-                        <div class='mono bg-white border border-gray-500 inline-block px-1'>800-123-456</div>
-                        <div class='mt-1 flex gap-2'>
-                            <input id='ph-number' class='flex-1 px-2 py-1 border border-gray-500 mono text-xs' placeholder='Numero che vuoi richiamare...' />
-                            <button id='ph-verify-btn' class='retro-btn px-3 py-1 text-xs font-bold'>Verifica</button>
-                        </div>
-                        <div id='ph-res' class='mt-1 text-xs font-bold'></div>
-                    </div>
-                </div>
-            """
+            # --- SIMULAZIONE TELEFONATA A FASI ---
+            # Fase 1: squillo (suono 8-bit), Fase 2: dialogo a scelte, Fase 3: esito
+            try:
+                js.window.sfxPhone()
+            except Exception:
+                pass
 
-            def accept_wrong():
-                js.window.closeWindow('alert')
-                update_integrity(-25)
-                update_score(-70)
-                show_notification('Compromissione', 'Accesso remoto concesso.', 'error')
-                if state.script_waiting == 'phone':
-                    state.script_waiting = None
-                    script_repeat_step('Per continuare devi verificare l\'identità e rifiutare l\'accesso remoto.')
+            phone_state = {'step': 0, 'score_penalty': 0, 'verified': False}
 
-            def refuse_ok():
-                js.window.closeWindow('alert')
-                update_score(90)
-                show_notification('Bene', 'Hai rifiutato la richiesta sospetta.', 'success')
-                if state.script_waiting == 'phone':
-                    script_complete_step()
+            DIALOGO = [
+                {
+                    'id': 'intro',
+                    'caller': '📞 Supporto Tecnico (chiamata in arrivo)',
+                    'text': '"Buongiorno, sono Marco del supporto tecnico Microsoft. Abbiamo rilevato un virus critico sul suo PC e dobbiamo intervenire subito con accesso remoto."',
+                    'hint': 'Red flag: Microsoft non chiama mai proattivamente. Cosa fai?',
+                    'choices': [
+                        {'label': '🔴 "Certo, proceda pure"', 'correct': False, 'next': 'end_bad',
+                         'feedback': 'Accesso remoto concesso a uno sconosciuto: errore grave!'},
+                        {'label': '🟡 "Chi è esattamente? Numero di ticket?"', 'correct': True, 'next': 'ticket',
+                         'feedback': 'Bene: chiedere un ticket è una best practice.'},
+                        {'label': '🟡 "Aspetti, la richiamo io"', 'correct': True, 'next': 'callback',
+                         'feedback': 'Ottimo: richiamare su numero ufficiale è la mossa giusta.'},
+                    ]
+                },
+                {
+                    'id': 'ticket',
+                    'caller': '📞 "Marco" — Supporto Tecnico',
+                    'text': '"Il numero ticket è... ehm... TK-98765. È urgente, ogni secondo conta. Mi installi subito TeamViewer."',
+                    'hint': 'Indizio: titubanza sul ticket + pressione = social engineering.',
+                    'choices': [
+                        {'label': '🔴 Installa TeamViewer', 'correct': False, 'next': 'end_bad',
+                         'feedback': 'Software di accesso remoto installato: sistema compromesso.'},
+                        {'label': '🟡 "Verifico il ticket sul portale IT"', 'correct': True, 'next': 'verify_ticket',
+                         'feedback': 'Giusto! Verificare il ticket è fondamentale.'},
+                        {'label': '🟢 "Non installo nulla. Richiamo l\'IT interno."', 'correct': True, 'next': 'end_good',
+                         'feedback': 'Perfetto: contatti sempre l\'IT interno, non chi ha chiamato.'},
+                    ]
+                },
+                {
+                    'id': 'callback',
+                    'caller': '🖥️ — Directory Aziendale',
+                    'text': 'Cerchi il numero ufficiale del supporto tecnico. In directory: <b class="mono">800-123-456</b>.<br>Vuoi richiamare su quel numero o su quello fornito dal chiamante?',
+                    'hint': 'Non richiamare mai sul numero fornito dal sospetto!',
+                    'choices': [
+                        {'label': '🟢 Richiamo 800-123-456 (ufficiale)', 'correct': True, 'next': 'end_good',
+                         'feedback': 'Corretto! Il vero supporto confermerà di non aver mai chiamato.'},
+                        {'label': '🔴 Richiamo il numero del "tecnico"', 'correct': False, 'next': 'end_bad',
+                         'feedback': 'Grave: hai richiamato il truffatore, che ha confermato la storia.'},
+                    ]
+                },
+                {
+                    'id': 'verify_ticket',
+                    'caller': '🖥️ — Portale IT Interno',
+                    'text': 'Accedi al portale IT interno. Ricerca ticket TK-98765...<br><br><span class="text-red-700 font-bold">TICKET NON TROVATO nel sistema.</span><br>Nessuna chiamata pianificata.',
+                    'hint': 'Il ticket non esiste: è una truffa confermata.',
+                    'choices': [
+                        {'label': '🟢 Riattacca e segnala all\'IT Security', 'correct': True, 'next': 'end_good',
+                         'feedback': 'Ottimo! Segnalare un tentativo di social engineering è la risposta corretta.'},
+                        {'label': '🔴 "Forse è un errore del sistema, procedo..."', 'correct': False, 'next': 'end_bad',
+                         'feedback': 'Errore: il ticket inesistente era la prova della truffa.'},
+                    ]
+                },
+                {
+                    'id': 'end_good',
+                    'caller': '✅ Risultato',
+                    'text': '<span class="text-green-700 font-bold">Minaccia neutralizzata!</span><br>Hai correttamente identificato e gestito un attacco di social engineering telefonico.<br><br>Il vero supporto tecnico <b>non chiama mai proattivamente</b> chiedendo accesso remoto.',
+                    'hint': '',
+                    'choices': [
+                        {'label': '✅ Continua', 'correct': True, 'next': None, 'is_final': True, 'win': True}
+                    ]
+                },
+                {
+                    'id': 'end_bad',
+                    'caller': '❌ Risultato',
+                    'text': '<span class="text-red-700 font-bold">Sistema compromesso!</span><br>Hai concesso accesso remoto o fidato di un truffatore.<br><br><b>Lezione:</b> Microsoft/supporto IT non chiama <i>mai</i> proattivamente. Non installare software né fornire accesso a sconosciuti.',
+                    'hint': '',
+                    'choices': [
+                        {'label': '🔄 Riprova', 'correct': False, 'next': None, 'is_final': True, 'win': False}
+                    ]
+                },
+            ]
 
-            def verify_flow():
-                # richiesto: almeno 2 checkbox + numero ufficiale corretto
-                checks = 0
-                for cid in ('phk1','phk2','phk3','phk4'):
-                    el = document.getElementById(cid)
-                    if el and el.checked:
-                        checks += 1
-                num = (document.getElementById('ph-number').value or '').strip()
+            step_map = {s['id']: s for s in DIALOGO}
 
-                res = document.getElementById('ph-res')
+            def render_phone_step(step_id):
+                step = step_map[step_id]
+                caller_html = f"<div class='font-bold text-blue-900 mb-1 text-sm phone-ringing'>{step['caller']}</div>"
+                text_html   = f"<div class='retro-border-inset bg-white p-2 text-xs leading-relaxed mb-2'>{step['text']}</div>"
+                hint_html   = f"<div class='text-[10px] text-orange-800 font-bold mb-2'>🔍 {step['hint']}</div>" if step['hint'] else ''
+                choices_html = "".join(
+                    f"<button id='phone-choice-{i}' class='retro-btn w-full py-1 text-xs font-bold text-left mb-1'>{c['label']}</button>"
+                    for i, c in enumerate(step['choices'])
+                )
+                extra = f"{caller_html}{text_html}{hint_html}<div id='phone-choices'>{choices_html}</div><div id='phone-feedback' class='mt-2 text-xs font-bold'></div>"
 
-                if checks < 2:
-                    if res:
-                        res.innerText = 'Seleziona almeno 2 verifiche.'
-                        res.style.color = '#b00000'
-                    update_score(-10)
-                    return
+                show_alert(
+                    title='📞 Chiamata — Social Engineering',
+                    message='Gestisci la telefonata nel modo corretto.',
+                    detail='',
+                    icon='warn',
+                    extra_html=extra,
+                    buttons=[]
+                )
 
-                if num != '800-123-456':
-                    if res:
-                        res.innerText = 'Numero non ufficiale: rischio di truffa. Usa quello in directory.'
-                        res.style.color = '#b00000'
-                    update_score(-10)
-                    return
+                # bind choices
+                for i, choice in enumerate(step['choices']):
+                    def make_choice_handler(c, sid):
+                        def handler(ev=None):
+                            fb = document.getElementById('phone-feedback')
+                            if fb:
+                                fb.innerText = c['feedback']
+                                fb.style.color = '#0a6b0a' if c['correct'] else '#b00000'
 
-                if res:
-                    res.innerText = 'Verifica OK. Ora rifiuta accesso remoto.'
-                    res.style.color = '#0a6b0a'
-                show_notification('Verifica', 'Identità verificata. Ora rifiuta l\'accesso remoto.', 'success')
+                            if c.get('is_final'):
+                                def proceed(ev2=None):
+                                    js.window.closeWindow('alert')
+                                    if c.get('win'):
+                                        update_score(120)
+                                        try:
+                                            js.window.logDebriefStep(state.script_step_idx, 'phone', True,
+                                                'Hai identificato correttamente il social engineering telefonico.',
+                                                'Il supporto tecnico non chiama mai proattivamente per accesso remoto.')
+                                        except Exception:
+                                            pass
+                                        if state.script_waiting == 'phone':
+                                            script_complete_step()
+                                    else:
+                                        update_integrity(-25)
+                                        update_score(-70)
+                                        try:
+                                            js.window.logDebriefStep(state.script_step_idx, 'phone', False,
+                                                'Hai concesso accesso remoto a un truffatore.',
+                                                'Non installare mai software richiesti da sconosciuti al telefono.')
+                                        except Exception:
+                                            pass
+                                        if state.script_waiting == 'phone':
+                                            state.script_waiting = None
+                                            script_repeat_step('Sei caduto in una truffa telefonica. Riprova!')
+                                js.setTimeout(create_proxy(proceed), 1200)
+                            else:
+                                # disabilita i pulsanti dopo la scelta
+                                for j in range(len(step['choices'])):
+                                    b = document.getElementById(f'phone-choice-{j}')
+                                    if b:
+                                        b.disabled = True
+                                        b.style.opacity = '0.5' if j != int(ev.target.id.split('-')[-1]) else '1'
+                                # avanza al prossimo step dopo 1.3s
+                                next_id = c.get('next')
+                                if next_id:
+                                    js.setTimeout(create_proxy(lambda ev2=None: render_phone_step(next_id)), 1400)
+                        return handler
 
-            show_alert(
-                title='Chiamata in arrivo',
-                message='"Supporto Tecnico" richiede accesso remoto al PC.',
-                detail='Procedi con verifica identità (interattivo).',
-                icon='warn',
-                extra_html=extra_html,
-                buttons=[
-                    {'label': 'Concedi accesso', 'handler': accept_wrong},
-                    {'label': 'Rifiuta accesso', 'handler': refuse_ok},
-                ]
-            )
+                    btn = document.getElementById(f'phone-choice-{i}')
+                    if btn:
+                        p = create_proxy(make_choice_handler(choice, step_id))
+                        state.proxy_refs.append(p)
+                        btn.onclick = p
 
-            # bind verify btn
-            btn = document.getElementById('ph-verify-btn')
-            if btn:
-                p = create_proxy(lambda ev: verify_flow())
-                state.proxy_refs.append(p)
-                btn.onclick = p
+            render_phone_step('intro')
 
         # --- MITM / SESSION (lineare: solo scelta corretta avanza) ---
 
@@ -2394,6 +3295,12 @@ Comandi Terminale utili:
                 update_integrity(-20)
                 update_score(-50)
                 show_notification('MITM', 'Connessione non sicura accettata.', 'error')
+                try:
+                    js.window.logDebriefStep(state.script_step_idx, 'mitm', False,
+                        'Hai accettato un certificato non valido (Issuer: UnknownCA).',
+                        'Un certificato non valido è sempre un campanello d\'allarme: annulla la connessione.')
+                except Exception:
+                    pass
                 if state.script_waiting == 'mitm':
                     state.script_waiting = None
                     script_repeat_step('Dovevi ANNULLARE: certificato non valido = rischio MITM.')
@@ -2402,6 +3309,12 @@ Comandi Terminale utili:
                 js.window.closeWindow('alert')
                 update_score(80)
                 show_notification('OK', 'Hai evitato una connessione rischiosa.', 'success')
+                try:
+                    js.window.logDebriefStep(state.script_step_idx, 'mitm', True,
+                        'Hai annullato la connessione con certificato non valido.',
+                        'Ottimo: "UnknownCA" come emittente è un segnale classico di MitM.')
+                except Exception:
+                    pass
                 if state.script_waiting == 'mitm':
                     script_complete_step()
 
@@ -2451,6 +3364,12 @@ Comandi Terminale utili:
             state.session_at_risk = False
             update_score(90)
             show_notification('Sessione', 'Sessione terminata correttamente.', 'success')
+            try:
+                js.window.logDebriefStep(state.script_step_idx, 'session', True,
+                    'Hai terminato la sessione a rischio.',
+                    'Terminare la sessione su reti non fidate previene il furto dei cookie.')
+            except Exception:
+                pass
             if state.script_waiting == 'session':
                 script_complete_step()
 
@@ -2459,6 +3378,12 @@ Comandi Terminale utili:
             update_integrity(-18)
             update_score(-40)
             show_notification('Sessione compromessa', 'Cookie/sessione potenzialmente rubati.', 'error')
+            try:
+                js.window.logDebriefStep(state.script_step_idx, 'session', False,
+                    'Hai ignorato l\'avviso di sessione a rischio.',
+                    'I cookie di sessione rubati permettono di accedere al tuo account senza password.')
+            except Exception:
+                pass
             if state.script_waiting == 'session':
                 state.script_waiting = None
                 script_repeat_step('Per continuare devi TERMINARE la sessione a rischio.')
@@ -2681,6 +3606,12 @@ Comandi Terminale utili:
         def _iso_retry():
             state.iso_chosen_hash = None
             state.iso_phase = 'browse'
+            try:
+                js.window.logDebriefStep(state.script_step_idx, 'iso', False,
+                    'Hai usato un hash da fonte non ufficiale: l\'ISO era manomessa.',
+                    'Scarica sempre l\'hash SHA-256 da ubuntu.com, mai da siti mirror sconosciuti.')
+            except Exception:
+                pass
             if state.script_waiting == 'iso':
                 state.script_waiting = None
                 script_repeat_step('ISO compromessa. Riprova scegliendo la fonte corretta!')
@@ -2688,6 +3619,12 @@ Comandi Terminale utili:
         def _iso_complete():
             update_score(150)
             show_notification('Ubuntu installato', 'ISO autentica. Installazione completata!', 'success')
+            try:
+                js.window.logDebriefStep(state.script_step_idx, 'iso', True,
+                    'Hai verificato l\'hash SHA-256 dalla fonte ufficiale e il file era autentico.',
+                    'Verifica sempre l\'hash da ubuntu.com, non da siti mirror non ufficiali.')
+            except Exception:
+                pass
             if state.script_waiting == 'iso':
                 script_complete_step()
 
@@ -2869,6 +3806,12 @@ Comandi Terminale utili:
             print_terminal('Decrittazione completata. File ripristinati.', 'text-green-500')
             update_score(300)
             show_notification('Ripristino', 'Ransomware neutralizzato.', 'success')
+            try:
+                js.window.logDebriefStep(state.script_step_idx, 'ransomware', True,
+                    'Hai trovato la chiave nei log e decrittato i file.',
+                    'In caso reale: backup offline + non pagare il riscatto + isola il sistema infetto.')
+            except Exception:
+                pass
 
             if state.script_waiting == 'ransomware':
                 script_complete_step()
@@ -2911,6 +3854,12 @@ Comandi Terminale utili:
             state.final_attack_triggered = False
             print_terminal('MINACCIA NEUTRALIZZATA. CONNESSIONE TERMINATA.', 'text-green-500 font-bold')
             show_notification('Attacco bloccato', 'Sistema stabilizzato.', 'success')
+            try:
+                js.window.logDebriefStep(state.script_step_idx, 'final', True,
+                    f'Hai bloccato l\'IP attaccante {state.attacker_ip} con il comando block.',
+                    'In produzione: firewall + IDS/IPS + incident response immediato.')
+            except Exception:
+                pass
 
             if state.script_waiting == 'final':
                 script_complete_step()
@@ -3027,6 +3976,12 @@ Comandi Terminale utili:
                         update_score(200)
                         print_terminal('Account bloccato. Minaccia interna contenuta.', 'text-green-500')
                         show_notification('Insider threat', 'Account bloccato con successo.', 'success')
+                        try:
+                            js.window.logDebriefStep(state.script_step_idx, 'insider', True,
+                                'Hai bloccato l\'account interno m.neri con lockuser.',
+                                'L\'insider threat è spesso il vettore più pericoloso: monitora sempre gli accessi anomali.')
+                        except Exception:
+                            pass
                         if state.script_waiting == 'insider':
                             script_complete_step()
                     else:
@@ -3099,22 +4054,47 @@ Comandi Terminale utili:
         def game_over():
             state.game_active = False
             stop_all_timers()
+            try:
+                js.window.sfxGameOver()
+                js.window.flashScreen('red')
+            except Exception:
+                pass
+            # mostra prima end-screen classica, poi dopo 2s apre debrief
             document.getElementById('end-screen').classList.remove('hidden')
             document.getElementById('end-header-color').style.background = 'linear-gradient(90deg, #800000, #ff0000)'
             document.getElementById('end-title').innerText = 'SISTEMA COMPROMESSO'
             document.getElementById('end-title').className = 'text-4xl font-bold mb-4 text-red-700'
             document.getElementById('end-message').innerText = "L'integrità è scesa a zero. La simulazione termina qui."
             document.getElementById('end-score').innerText = f"Punteggio Finale: {state.score}"
+            def open_debrief():
+                document.getElementById('end-screen').classList.add('hidden')
+                try:
+                    js.window.showDebrief(False, state.score, state.integrity)
+                except Exception:
+                    pass
+            js.setTimeout(create_proxy(open_debrief), 2200)
 
         def game_win():
             state.game_active = False
             stop_all_timers()
+            try:
+                js.window.sfxLevelUp()
+                js.window.flashScreen('green')
+            except Exception:
+                pass
             document.getElementById('end-screen').classList.remove('hidden')
-            document.getElementById('end-header-color').style.background = 'linear-gradient(90deg, #008000, #00ff00)'
-            document.getElementById('end-title').innerText = 'MISSIONE COMPIUTA'
+            document.getElementById('end-header-color').style.background = 'linear-gradient(90deg, #005500, #00cc00)'
+            document.getElementById('end-title').innerText = 'MISSIONE COMPIUTA! 🏆'
             document.getElementById('end-title').className = 'text-4xl font-bold mb-4 text-green-700'
-            document.getElementById('end-message').innerText = 'Hai completato la sequenza di problemi del livello.'
+            document.getElementById('end-message').innerText = 'Hai completato tutti gli step del livello. Ottimo lavoro!'
             document.getElementById('end-score').innerText = f"Punteggio Finale: {state.score}"
+            def open_debrief():
+                document.getElementById('end-screen').classList.add('hidden')
+                try:
+                    js.window.showDebrief(True, state.score, state.integrity)
+                except Exception:
+                    pass
+            js.setTimeout(create_proxy(open_debrief), 2200)
 
         # --- EXPOSE TO JS ---
 
