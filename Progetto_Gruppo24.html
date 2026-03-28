@@ -403,6 +403,150 @@
             50%      { transform: rotate(5deg) scale(1.1); }
         }
         .fire-sway { display:inline-block; animation: fireSway 0.5s infinite; }
+
+        /* --- EMAIL CLUE HUNTER --- */
+        .email-clue {
+            background: #fffde7;
+            border-bottom: 2px dashed #bbb;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: background 0.15s, border-color 0.15s;
+            padding: 0 2px;
+        }
+        .email-clue:hover { background: #fff59d; border-color: #888; }
+        .email-clue.found-bad {
+            background: #ffcccc; border-bottom: 2px solid #cc0000;
+            color: #880000; font-weight: bold;
+            animation: cluePopBad 0.3s ease;
+        }
+        .email-clue.found-good {
+            background: #ccffcc; border-bottom: 2px solid #008800;
+            color: #004400; font-weight: bold;
+            animation: cluePopGood 0.3s ease;
+        }
+        @keyframes cluePopBad  { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
+        @keyframes cluePopGood { 0%{transform:scale(1)} 50%{transform:scale(1.06)} 100%{transform:scale(1)} }
+
+        .clue-tooltip {
+            position: fixed; background: #000080; color: #fff;
+            font-size: 10px; padding: 4px 8px;
+            border: 1px solid #fff; box-shadow: 2px 2px 0 #000;
+            z-index: 9999; pointer-events: none;
+            max-width: 220px; line-height: 1.5;
+        }
+
+        .verdict-btn {
+            flex: 1; padding: 10px 4px; font-weight: bold;
+            font-size: 12px; cursor: pointer;
+            border: none; transition: filter 0.1s;
+        }
+        .verdict-btn:hover  { filter: brightness(1.12); }
+        .verdict-btn:active { filter: brightness(0.9); transform: translate(1px,1px); }
+        .verdict-phish {
+            background: linear-gradient(135deg,#cc0000,#ff4444); color:#fff;
+            box-shadow: inset 1px 1px #ff9999, inset -1px -1px #880000, 2px 2px 0 #000;
+        }
+        .verdict-safe {
+            background: linear-gradient(135deg,#006600,#33bb33); color:#fff;
+            box-shadow: inset 1px 1px #99ff99, inset -1px -1px #004400, 2px 2px 0 #000;
+        }
+        .verdict-btn.locked { opacity:0.35; cursor:not-allowed; filter:grayscale(0.8); }
+
+        .clue-pill {
+            display:inline-flex; align-items:center; gap:3px;
+            padding: 2px 7px; border-radius: 10px;
+            font-size: 11px; font-weight: bold; margin: 2px;
+            cursor: default; border: 1px solid;
+            animation: cluePopBad 0.25s ease;
+        }
+        .clue-pill-bad  { background:#ffdddd; border-color:#cc0000; color:#880000; }
+        .clue-pill-good { background:#ddffdd; border-color:#008800; color:#005500; }
+
+        .scanner-bar {
+            height: 6px; border-radius: 3px;
+            background: linear-gradient(90deg, #000080, #1084d0);
+            transition: width 0.4s ease;
+        }
+
+        /* ---- STEP TIMER ---- */
+        #step-timer-ring {
+            position: fixed; top: 10px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 500;
+            display: none;
+            align-items: center; gap: 8px;
+            background: #c0c0c0;
+            border: 2px solid; border-color: #fff #808080 #808080 #fff;
+            padding: 3px 12px;
+            box-shadow: 2px 2px 0 #000;
+            font-size: 12px; font-weight: bold;
+        }
+        #step-timer-ring.warning { background: #fff3cd; }
+        #step-timer-ring.danger  { background: #ffe0e0; animation: timerPulse 0.5s infinite; }
+        @keyframes timerPulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+        #step-timer-bar-wrap {
+            width: 80px; height: 8px;
+            background: #808080; border: 1px solid #000; border-radius: 1px; overflow: hidden;
+        }
+        #step-timer-bar { height: 100%; background: #0a6b0a; transition: width 0.95s linear; border-radius: 1px; }
+
+        /* ---- POST-ERROR BRIEFING ---- */
+        #briefing-overlay {
+            position: fixed; inset: 0; z-index: 8000;
+            background: rgba(0,0,0,0.75);
+            display: none; align-items: center; justify-content: center;
+        }
+        #briefing-overlay.show { display: flex; }
+        .briefing-window {
+            background: #c0c0c0;
+            border: 3px solid; border-color: #fff #808080 #808080 #fff;
+            box-shadow: 4px 4px 0 #000;
+            width: 520px; max-height: 85vh;
+            display: flex; flex-direction: column;
+            animation: briefingIn 0.3s ease;
+        }
+        @keyframes briefingIn { from{transform:scale(0.85) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+        .briefing-section { background: #fff; border: 2px inset #808080; margin: 6px; padding: 8px; }
+
+        /* ---- STATS SCREEN ---- */
+        #stats-screen {
+            position: fixed; inset: 0; z-index: 8500;
+            background: #008080;
+            display: none; align-items: center; justify-content: center;
+        }
+        #stats-screen.show { display: flex; }
+        .stats-bar-wrap { background:#808080; height:14px; border:1px solid #000; flex:1; overflow:hidden; }
+        .stats-bar { height:100%; background:linear-gradient(90deg,#000080,#1084d0); transition:width 1s ease; }
+        .stats-rank { font-size:28px; font-weight:bold; font-family:'Courier New',monospace; }
+
+        /* ---- AMBIENT DESKTOP ---- */
+        .ambient-mail-ping {
+            position: absolute; top: 48px; left: 4px;
+            background: #ff4444; color: #fff;
+            font-size: 9px; font-weight: bold;
+            width: 14px; height: 14px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            border: 1px solid #880000; z-index: 20;
+            animation: comboPop 0.3s ease;
+        }
+        .taskbar-clock-blink { animation: blinker 0.6s step-end infinite; }
+
+        /* ---- FILE ICON ENCRYPT EFFECT ---- */
+        @keyframes fileCorrupt {
+            0%,100% { filter: none; }
+            25% { filter: hue-rotate(90deg) saturate(3); }
+            50% { filter: invert(1); }
+            75% { filter: hue-rotate(180deg) contrast(3); }
+        }
+        .file-corrupting { animation: fileCorrupt 0.4s steps(1) 4; }
+
+        /* ---- CPU METER (cryptojacking) ---- */
+        #cpu-meter {
+            position: fixed; bottom: 50px; right: 10px;
+            background: #000; color: #0f0; font-family: monospace; font-size: 10px;
+            padding: 4px 8px; border: 1px solid #0f0;
+            z-index: 600; display: none;
+        }
     </style>
 </head>
 <body class="h-screen w-screen overflow-hidden bg-[#008080]">
@@ -452,6 +596,65 @@
 
     <!-- SCREEN FLASH -->
     <div id="screen-flash"></div>
+
+    <!-- STEP TIMER -->
+    <div id="step-timer-ring">
+        ⏱ <span id="step-timer-label">TEMPO:</span>
+        <span id="step-timer-val" style="font-size:15px;color:#000080;min-width:28px;">--</span>
+        <div id="step-timer-bar-wrap"><div id="step-timer-bar" style="width:100%;"></div></div>
+    </div>
+
+    <!-- CPU METER (cryptojacking visual) -->
+    <div id="cpu-meter">CPU: <span id="cpu-val">12</span>%</div>
+
+    <!-- POST-ERROR BRIEFING OVERLAY -->
+    <div id="briefing-overlay">
+        <div class="briefing-window">
+            <div class="window-header danger" id="briefing-header">
+                <span>⚠️ <span id="briefing-title">Analisi Incidente</span></span>
+                <div class="window-controls">
+                    <button id="briefing-close-btn" onclick="window.closeBriefing()">X</button>
+                </div>
+            </div>
+            <div style="overflow-y:auto;flex:1;padding:2px;">
+                <div class="briefing-section">
+                    <div style="font-weight:bold;font-size:12px;margin-bottom:4px;color:#800000;">🔴 COSA È SUCCESSO</div>
+                    <div id="briefing-what" style="font-size:11px;line-height:1.6;"></div>
+                </div>
+                <div class="briefing-section">
+                    <div style="font-weight:bold;font-size:12px;margin-bottom:4px;color:#000080;">🔵 SEGNALI CHE AVRESTI DOVUTO NOTARE</div>
+                    <div id="briefing-signals" style="font-size:11px;line-height:1.6;"></div>
+                </div>
+                <div class="briefing-section">
+                    <div style="font-weight:bold;font-size:12px;margin-bottom:4px;color:#006600;">🟢 COME DIFENDERSI</div>
+                    <div id="briefing-howto" style="font-size:11px;line-height:1.6;"></div>
+                </div>
+                <div style="background:#fffbe6;border:1px solid #ccc;margin:6px;padding:6px;font-size:10px;">
+                    📊 <b>Statistiche:</b> <span id="briefing-stats" style="color:#555;"></span>
+                </div>
+            </div>
+            <div style="padding:8px;border-top:1px solid #aaa;display:flex;justify-content:center;gap:8px;">
+                <button class="retro-btn px-6 py-1 font-bold" onclick="window.closeBriefing()">✅ Ho capito — Riprova</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS SCREEN (between levels / on win) -->
+    <div id="stats-screen">
+        <div class="retro-border p-1 bg-[#c0c0c0] shadow-2xl" style="width:560px;max-height:92vh;display:flex;flex-direction:column;">
+            <div class="window-header" id="stats-header">
+                <span>📊 <span id="stats-title">Statistiche Livello</span></span>
+                <div class="window-controls"><button onclick="window.closeStats()">X</button></div>
+            </div>
+            <div class="window-inner flex flex-col overflow-hidden flex-1">
+                <div style="overflow-y:auto;flex:1;padding:10px;background:#fff;" id="stats-content"></div>
+                <div style="padding:8px;border-top:1px solid #aaa;display:flex;justify-content:center;gap:8px;background:#c0c0c0;">
+                    <button class="retro-btn px-6 py-1 font-bold" onclick="window.closeStats()">Continua</button>
+                    <button class="retro-btn px-4 py-1" onclick="location.reload()">Ricomincia</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- COMBO BADGE -->
     <div id="combo-badge">🔥 COMBO x<span id="combo-count">2</span></div>
@@ -763,9 +966,10 @@
 
         <!-- Desktop Icons -->
         <div class="absolute top-4 left-4 flex flex-col gap-3 z-10">
-            <div onclick="window.openWindow('mail')" class="desktop-icon group">
+            <div onclick="window.openWindow('mail')" class="desktop-icon group" style="position:relative;">
                 <svg class="svg-ico-lg drop-shadow" style="color:#fff6b0"><use href="#ico-envelope"/></svg>
                 <div class="desktop-icon-text group-hover:bg-blue-800">Posta</div>
+                <div id="ambient-mail-badge" class="ambient-mail-ping" style="display:none;">!</div>
             </div>
 
             <div onclick="window.openWindow('terminal')" class="desktop-icon group">
@@ -1710,6 +1914,338 @@
             document.getElementById('debrief-screen').classList.remove('hidden');
         };
 
+        // ============================================================
+        // STEP TIMER
+        // ============================================================
+        let _stepTimerInterval = null;
+        let _stepTimerSecs = 0;
+        let _stepTimerMax = 0;
+        let _stepTimerCallback = null;
+
+        window.startStepTimer = function(seconds, onTimeout) {
+            window.stopStepTimer();
+            _stepTimerSecs = seconds;
+            _stepTimerMax  = seconds;
+            _stepTimerCallback = onTimeout;
+            const ring = document.getElementById('step-timer-ring');
+            const val  = document.getElementById('step-timer-val');
+            const bar  = document.getElementById('step-timer-bar');
+            if (ring) { ring.style.display = 'flex'; ring.className = ''; }
+
+            function tick() {
+                _stepTimerSecs--;
+                if (val) val.innerText = _stepTimerSecs + 's';
+                const pct = (_stepTimerSecs / _stepTimerMax * 100).toFixed(1);
+                if (bar) {
+                    bar.style.width = pct + '%';
+                    bar.style.background = _stepTimerSecs > _stepTimerMax*0.4 ? '#0a6b0a'
+                                         : _stepTimerSecs > _stepTimerMax*0.2 ? '#c8a000' : '#cc0000';
+                }
+                if (ring) {
+                    ring.className = _stepTimerSecs <= _stepTimerMax*0.2 ? 'danger'
+                                   : _stepTimerSecs <= _stepTimerMax*0.4 ? 'warning' : '';
+                }
+                if (_stepTimerSecs <= 5 && _stepTimerSecs > 0) {
+                    try { window.sfxAlert(); } catch(e) {}
+                }
+                if (_stepTimerSecs <= 0) {
+                    window.stopStepTimer();
+                    if (_stepTimerCallback) _stepTimerCallback();
+                }
+            }
+            if (val) val.innerText = seconds + 's';
+            if (bar) bar.style.width = '100%';
+            _stepTimerInterval = setInterval(tick, 1000);
+        };
+
+        window.stopStepTimer = function() {
+            if (_stepTimerInterval) { clearInterval(_stepTimerInterval); _stepTimerInterval = null; }
+            const ring = document.getElementById('step-timer-ring');
+            if (ring) ring.style.display = 'none';
+        };
+
+        // ============================================================
+        // POST-ERROR BRIEFING
+        // ============================================================
+        const BRIEFING_DB = {
+            email: {
+                what:    'Hai classificato erroneamente un\'email. In un contesto reale questo avrebbe potuto portare alla compromissione delle credenziali aziendali o a una transazione fraudolenta.',
+                signals: '• Mittente con dominio alterato (numeri al posto di lettere, TLD insolito)\n• Tono urgente o allarmistico non richiesto\n• Richiesta di credenziali, pagamenti o accesso remoto\n• Link abbreviati o URL non corrispondenti al mittente dichiarato\n• Errori grammaticali o ortografici evidenti',
+                howto:   '• Non cliccare mai link da email non attese — digita l\'URL manualmente\n• Verifica sempre il dominio completo del mittente (non solo il nome visualizzato)\n• In caso di dubbio, chiama il presunto mittente su un numero ufficiale\n• Segnala al reparto IT ogni email sospetta',
+                stats:   'Il 91% degli attacchi informatici inizia con una email di phishing. Il 30% degli utenti apre link di phishing.'
+            },
+            popup: {
+                what:    'Hai cliccato un pop-up fraudolento. Questi pop-up simulano avvisi di sistema o premi per indurti a installare malware o fornire dati personali.',
+                signals: '• Premi o vincite non richieste\n• Richiesta di clic immediato senza possibilità di chiudere\n• Grafica che imita avvisi di Windows o antivirus\n• URL nella barra indirizzi non corrispondente a siti ufficiali',
+                howto:   '• Chiudi sempre i pop-up dalla X del sistema operativo (Alt+F4), non cliccando al loro interno\n• Non inserire mai dati personali in finestre pop-up\n• Usa un blocco pubblicità (AdBlocker) nel browser',
+                stats:   'I pop-up malvertising infettano oltre 1,8 miliardi di dispositivi ogni anno.'
+            },
+            web: {
+                what:    'Hai scelto una fonte web non sicura. Download da siti non ufficiali possono contenere malware nascosto nelle doppie estensioni o in file rinominati.',
+                signals: '• URL con HTTP invece di HTTPS\n• Dominio con typosquatting (amaz0n, ad0be, paypa1)\n• File con doppia estensione (.pdf.exe, .doc.js)\n• TLD sospetti (.ru, .xyz, .tk per contenuti italiani)\n• Certificato SSL assente o non valido',
+                howto:   '• Scarica software solo dai siti ufficiali del produttore\n• Verifica sempre il certificato SSL (lucchetto verde)\n• Usa un antivirus con scansione in tempo reale\n• Controlla l\'hash SHA256 dei file scaricati prima di eseguirli',
+                stats:   'Il 46% del malware viene distribuito tramite siti web compromessi o clonati.'
+            },
+            password: {
+                what:    'La password non rispettava i criteri minimi di sicurezza. Password deboli o comuni sono le prime a essere violate negli attacchi di tipo brute-force o credential stuffing.',
+                signals: '• Lunghezza inferiore a 12 caratteri\n• Assenza di maiuscole, numeri o simboli\n• Password presenti in dizionari comuni (123456, password, qwerty)\n• Riutilizzo della stessa password su più servizi',
+                howto:   '• Usa password di almeno 12 caratteri con maiuscole, numeri e simboli\n• Utilizza un password manager (Bitwarden, KeePass)\n• Abilita l\'autenticazione a due fattori (2FA) ovunque possibile\n• Non riusare mai la stessa password',
+                stats:   'Il 23 milioni di account usano "123456" come password. L\'81% delle violazioni di dati è causato da password deboli.'
+            },
+            wifi: {
+                what:    'Ti sei connesso a una rete WiFi pubblica non cifrata. Su reti OPEN, il traffico è visibile a chiunque nella stessa rete, incluse credenziali e sessioni.',
+                signals: '• Rete senza lucchetto (OPEN / nessuna autenticazione)\n• Nome di rete generico o insolito\n• Presenza di reti "clone" con nomi simili a reti ufficiali (Evil Twin)\n• Connessione non richiesta o automatica',
+                howto:   '• Evita reti WiFi pubbliche per attività sensibili\n• Usa sempre una VPN su reti pubbliche\n• Disabilita la connessione automatica alle reti aperte\n• Preferisci il tuo hotspot mobile per lavoro',
+                stats:   'Il 25% delle reti WiFi pubbliche non usa alcuna cifratura. Oltre il 50% degli utenti ha subito un attacco su WiFi pubblico.'
+            },
+            phone: {
+                what:    'Hai ceduto a un attacco di social engineering telefonico. I truffatori impersonano supporto tecnico, banche o colleghi per ottenere accesso remoto o credenziali.',
+                signals: '• Chiamata non attesa da "supporto tecnico" o "Microsoft"\n• Richiesta di accesso remoto immediato\n• Urgenza artificiale ("il tuo PC è infetto adesso")\n• Pressione a non coinvolgere altri colleghi\n• Il numero non corrisponde a quello ufficiale',
+                howto:   '• Il vero supporto tecnico non chiama mai proattivamente\n• Non installare mai software richiesto da sconosciuti al telefono\n• Richiama sempre su numeri ufficiali verificati\n• Verifica l\'identità richiedendo un ticket di supporto tracciabile',
+                stats:   'Il vishing (phishing telefonico) è cresciuto del 554% nel solo 2021. Costa alle aziende una media di 14.000€ per incidente.'
+            },
+            usb: {
+                what:    'Hai aperto una USB sconosciuta. Un\'USB drop attack può eseguire malware automaticamente al collegamento, installando keylogger, ransomware o backdoor in pochi secondi.',
+                signals: '• USB trovata in luoghi pubblici o in ufficio senza proprietario\n• File con nomi allettanti (CV_2024.pdf.exe, Buste_paga.zip)\n• Autorun che si avvia al collegamento\n• USB con badge o brand di azienda (aumenta la credibilità)',
+                howto:   '• Non collegare mai USB trovate — consegnale sempre all\'IT\n• Disabilita l\'autorun su tutti i PC aziendali\n• Usa endpoint protection con scansione automatica USB\n• Se devi analizzarla, usa un ambiente isolato (sandbox)',
+                stats:   'Nel famoso caso Stuxnet, l\'attacco iniziò con una USB abbandonata in un parcheggio. Il 48% dei dipendenti collega USB trovate per curiosità.'
+            },
+            mitm: {
+                what:    'Hai accettato un certificato non valido. Questo scenario simula un attacco Man-in-the-Middle in cui un attaccante intercetta il traffico presentando un certificato falso.',
+                signals: '• Browser mostra avviso "certificato non valido" o "connessione non sicura"\n• Issuer del certificato sconosciuto (UnknownCA)\n• URL corretto ma certificato diverso da quello atteso\n• Connessione su rete non fidata (WiFi pubblico)',
+                howto:   '• Non ignorare mai gli avvisi di certificato del browser\n• Verifica il certificato cliccando sul lucchetto\n• Su reti non fidate, usa sempre VPN\n• Segnala immediatamente certificati inattesi all\'IT',
+                stats:   'Gli attacchi MitM rappresentano il 35% di tutti gli exploit di autenticazione. Il costo medio di una violazione MitM è di 150.000€.'
+            },
+            session: {
+                what:    'Hai ignorato un avviso di sessione a rischio. I cookie di sessione rubati permettono a un attaccante di accedere ai tuoi account senza bisogno della password.',
+                signals: '• Sessione aperta su rete non fidata (HTTP o WiFi OPEN)\n• Login da IP o dispositivi diversi dal solito\n• Cookie trasmessi senza cifratura (HTTP invece di HTTPS)\n• Sessione attiva per troppo tempo senza timeout',
+                howto:   '• Termina sempre le sessioni attive dopo l\'uso su reti non fidate\n• Usa solo siti HTTPS per attività autenticate\n• Abilita l\'autenticazione 2FA per ridurre l\'impatto del furto cookie\n• Imposta timeout di sessione brevi su sistemi critici',
+                stats:   'Il furto di sessione è alla base del 26% delle violazioni di account aziendali.'
+            },
+            insider: {
+                what:    'Non hai bloccato l\'account interno a rischio in tempo. Gli insider threat sono tra i vettori più pericolosi perché l\'utente ha già accesso legittimo ai sistemi.',
+                signals: '• Accessi ad orari insoliti o da posizioni anomale\n• Download massiccio di dati o accesso a cartelle non pertinenti al ruolo\n• Tentativi di escalation dei privilegi\n• Log con anomalie: accessi ripetuti a dati sensibili',
+                howto:   '• Monitora i log di accesso con sistemi SIEM\n• Applica il principio del minimo privilegio (least privilege)\n• Blocca subito gli account di dipendenti uscenti\n• Usa alert automatici per accessi anomali',
+                stats:   'Il 60% delle aziende ha subito un insider threat negli ultimi 12 mesi. Il tempo medio di rilevamento è 77 giorni.'
+            },
+            ransomware: {
+                what:    'Il sistema è rimasto cifrato troppo a lungo. Ogni secondo di ritardo nel rispondere a un ransomware aumenta il danno e i costi di ripristino.',
+                signals: '• File rinominati con estensioni sconosciute\n• Impossibilità di aprire documenti\n• Nota di riscatto sul desktop\n• Rallentamento del sistema (processo di cifratura in corso)\n• Log: processo anonimo con alto uso di CPU e I/O',
+                howto:   '• Isola immediatamente il sistema dalla rete\n• Cerca la chiave nei log prima di pagare (a volte è recuperabile)\n• Ripristina da backup offline (mai connessi alla rete durante l\'attacco)\n• Non pagare il riscatto: solo il 65% recupera i dati anche dopo il pagamento',
+                stats:   'Il ransomware causa danni per 265 miliardi di dollari all\'anno. Un attacco colpisce un\'azienda ogni 11 secondi.'
+            },
+            iso: {
+                what:    'Hai verificato l\'hash da una fonte non ufficiale o non hai verificato affatto. Un ISO manomesso può installare malware persistente a livello di sistema operativo, impossibile da rimuovere.',
+                signals: '• Hash scaricato da siti mirror non ufficiali\n• URL del sito diverso da ubuntu.com o debian.org\n• Hash non corrisponde dopo il download (file modificato)\n• Sito senza HTTPS o con certificato scaduto',
+                howto:   '• Scarica sempre gli hash SHA256 direttamente dal sito ufficiale del progetto\n• Esegui sha256sum sul file scaricato e confronta manualmente\n• Usa GPG per verificare anche la firma digitale\n• Non fidarti di hash su siti mirror non verificati',
+                stats:   'Nel 2016 il sito ufficiale di Linux Mint fu compromesso: 14.000 ISO con backdoor furono scaricate prima della scoperta.'
+            },
+            final: {
+                what:    'L\'IP attaccante non è stato bloccato in tempo. In un attacco reale, ogni secondo di ritardo permette all\'attaccante di esfiltrare dati, installare backdoor o compromettere altri sistemi.',
+                signals: '• Spike di traffico anomalo nei log di rete\n• Tentativi di login falliti ripetuti dallo stesso IP\n• Connessioni verso IP esterni sconosciuti\n• Utilizzo anomalo di CPU o banda in orari insoliti',
+                howto:   '• Implementa un SIEM per alert automatici in tempo reale\n• Configura regole firewall per blocco automatico di IP sospetti\n• Mantieni un Incident Response Plan aggiornato\n• Esegui penetration test regolari per trovare vulnerabilità prima degli attaccanti',
+                stats:   'Il tempo medio di rilevamento di una violazione è 207 giorni. Il costo medio di una violazione non rilevata è 4,2 milioni di dollari.'
+            }
+        };
+
+        window.showBriefing = function(kind, extraWhat) {
+            const db = BRIEFING_DB[kind] || BRIEFING_DB['email'];
+            document.getElementById('briefing-title').innerText = {
+                email:'Incidente Phishing', popup:'Pop-up Truffa', web:'Sito Pericoloso',
+                password:'Password Debole', wifi:'WiFi Non Sicuro', phone:'Social Engineering',
+                usb:'USB Trojan', mitm:'Attacco MitM', session:'Session Hijacking',
+                insider:'Insider Threat', ransomware:'Ransomware', iso:'ISO Manomessa',
+                final:'Attacco Finale'
+            }[kind] || 'Incidente di Sicurezza';
+
+            document.getElementById('briefing-what').innerText    = (extraWhat || db.what);
+            document.getElementById('briefing-signals').innerText = db.signals;
+            document.getElementById('briefing-howto').innerText   = db.howto;
+            document.getElementById('briefing-stats').innerText   = db.stats;
+            document.getElementById('briefing-overlay').classList.add('show');
+            try { window.sfxAlert(); } catch(e) {}
+        };
+
+        window.closeBriefing = function() {
+            document.getElementById('briefing-overlay').classList.remove('show');
+        };
+
+        // ============================================================
+        // STATS SCREEN
+        // ============================================================
+        const GLOBAL_STATS = {
+            email:    {fail: 43, tip: 'Il 43% dei giocatori sbaglia almeno una email al primo tentativo.'},
+            popup:    {fail: 28, tip: 'Il 28% clicca "Riscatta" sul pop-up fake.'},
+            web:      {fail: 35, tip: 'Il 35% sceglie la fonte non sicura nella navigazione.'},
+            password: {fail: 52, tip: 'Il 52% inserisce una password non abbastanza robusta.'},
+            wifi:     {fail: 31, tip: 'Il 31% si connette alla rete OPEN per comodità.'},
+            phone:    {fail: 61, tip: 'Il 61% dei giocatori concede accesso remoto al primo tentativo.'},
+            usb:      {fail: 48, tip: 'Il 48% apre i file della USB sconosciuta.'},
+            mitm:     {fail: 39, tip: 'Il 39% ignora l\'avviso di certificato non valido.'},
+            session:  {fail: 44, tip: 'Il 44% ignora l\'allerta di sessione a rischio.'},
+            insider:  {fail: 37, tip: 'Il 37% non blocca l\'insider in tempo.'},
+            ransomware:{fail:29, tip: 'Il 29% non trova la chiave nei log al primo tentativo.'},
+            iso:      {fail: 55, tip: 'Il 55% sceglie una fonte hash non ufficiale.'},
+            final:    {fail: 22, tip: 'Il 22% non blocca l\'IP attaccante in tempo.'}
+        };
+
+        window.showStatsScreen = function(won, score, integrity, debriefLog) {
+            // Normalizza debriefLog: accetta array JS, proxy PyScript, o fallback al log globale
+            let log = [];
+            try {
+                if (Array.isArray(debriefLog)) {
+                    log = debriefLog;
+                } else if (debriefLog && typeof debriefLog.length === 'number') {
+                    for (let i = 0; i < debriefLog.length; i++) {
+                        const it = debriefLog[i];
+                        log.push({
+                            step: it.step || i,
+                            kind: String(it.kind || ''),
+                            correct: !!it.correct,
+                            detail: String(it.detail || ''),
+                            tip: String(it.tip || '')
+                        });
+                    }
+                }
+            } catch(e) {}
+            if (!log.length) log = Array.isArray(window._debriefLog) ? window._debriefLog : [];
+            const correct = log.filter(x=>x.correct).length;
+            const total   = log.length;
+            const pct     = total > 0 ? Math.round(correct/total*100) : 100;
+            let grade, gradeColor, msg;
+            if (pct>=90){grade='S';gradeColor='#000080';msg='Esperto di sicurezza. Sei nel top 5% dei giocatori!';}
+            else if(pct>=75){grade='A';gradeColor='#0a6b0a';msg='Ottimo! Hai riconosciuto quasi tutte le minacce.';}
+            else if(pct>=55){grade='B';gradeColor='#8a6b00';msg='Buono. Qualche incertezza, ma il sistema regge.';}
+            else if(pct>=35){grade='C';gradeColor='#b05000';msg='Sufficiente. Riprova con più attenzione agli indizi.';}
+            else{grade='D';gradeColor='#b00000';msg='Sistema a rischio. Studia le difese e riprova!';}
+
+            const kindLabel = {
+                email:'📧 Email', popup:'🖥️ Pop-up', web:'🌐 Web', password:'🔑 Password',
+                wifi:'📶 WiFi', phone:'📞 Telefono', usb:'💾 USB', mitm:'🔐 MitM',
+                session:'🍪 Sessione', insider:'👤 Insider', ransomware:'🔒 Ransomware',
+                iso:'🧡 ISO', final:'⚠️ Finale'
+            };
+
+            let rowsHtml = '';
+            log.forEach(e => {
+                const gs = GLOBAL_STATS[e.kind];
+                const myOk = e.correct;
+                const globalFail = gs ? gs.fail : 30;
+                rowsHtml += `
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px;
+                     background:${myOk?'#f0fff0':'#fff0f0'};border-left:3px solid ${myOk?'#0a6b0a':'#cc0000'};">
+                    <div style="font-size:18px;">${myOk?'✅':'❌'}</div>
+                    <div style="flex:1;">
+                        <div style="font-weight:bold;font-size:11px;">${kindLabel[e.kind]||e.kind}</div>
+                        <div style="font-size:10px;color:#555;">${e.detail||''}</div>
+                    </div>
+                    <div style="text-align:right;min-width:110px;">
+                        <div style="font-size:10px;color:#888;">Globale: ${globalFail}% sbaglia</div>
+                        <div style="font-size:10px;">
+                            <div class="stats-bar-wrap" style="display:inline-block;width:80px;vertical-align:middle;">
+                                <div class="stats-bar" style="width:${globalFail}%;background:${myOk&&globalFail>40?'#0a6b0a':'#cc0000'};"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            // Classifica simulata
+            const rankPos = Math.max(1, Math.round((1 - pct/100) * 850 + Math.random()*50));
+            const rankTot = 1000;
+
+            document.getElementById('stats-title').innerText = won ? '🏆 Missione Compiuta — Statistiche' : '💀 Sistema Compromesso — Statistiche';
+            document.getElementById('stats-header').style.background = won
+                ? 'linear-gradient(90deg,#005500,#00aa00)'
+                : 'linear-gradient(90deg,#800000,#cc0000)';
+
+            document.getElementById('stats-content').innerHTML = `
+                <!-- Grade card -->
+                <div style="display:flex;align-items:center;gap:16px;padding:12px;background:#c0c0c0;
+                     border:2px solid;border-color:#fff #808080 #808080 #fff;margin-bottom:10px;">
+                    <div class="stats-rank" style="color:${gradeColor};width:60px;text-align:center;">${grade}</div>
+                    <div style="flex:1;">
+                        <div style="font-weight:bold;font-size:13px;">${msg}</div>
+                        <div style="font-size:11px;color:#555;margin-top:3px;">
+                            Step corretti: <b>${correct}/${total}</b> (${pct}%) &nbsp;·&nbsp;
+                            Punteggio: <b>${score}</b> &nbsp;·&nbsp;
+                            Integrità: <b>${integrity}%</b>
+                        </div>
+                    </div>
+                    <div style="text-align:center;background:#000080;color:#fff;padding:8px 12px;font-size:11px;font-weight:bold;min-width:90px;">
+                        🏅 CLASSIFICA<br>
+                        <span style="font-size:18px;font-family:monospace;">#${rankPos}</span><br>
+                        <span style="font-size:9px;opacity:0.8;">su ${rankTot} giocatori</span>
+                    </div>
+                </div>
+
+                <!-- Step breakdown -->
+                <div style="font-weight:bold;font-size:11px;margin-bottom:6px;border-bottom:1px solid #ccc;padding-bottom:3px;">
+                    📋 Step per step vs. media globale:
+                </div>
+                ${rowsHtml}
+
+                <div style="font-size:10px;color:#888;text-align:center;margin-top:8px;">
+                    CyberGuard — Statistiche simulate a scopo didattico
+                </div>
+            `;
+
+            document.getElementById('stats-screen').classList.add('show');
+            try { won ? window.sfxLevelUp() : window.sfxGameOver(); } catch(e) {}
+        };
+
+        window.closeStats = function() {
+            document.getElementById('stats-screen').classList.remove('show');
+        };
+
+        // ============================================================
+        // AMBIENT EFFECTS
+        // ============================================================
+        let _ambientMailCount = 0;
+        window.triggerAmbientMail = function() {
+            _ambientMailCount++;
+            const badge = document.getElementById('ambient-mail-badge');
+            if (badge) {
+                badge.style.display = 'flex';
+                badge.innerText = _ambientMailCount > 9 ? '9+' : _ambientMailCount;
+            }
+            try { window.sfxMail(); } catch(e) {}
+        };
+        window.clearAmbientMail = function() {
+            _ambientMailCount = 0;
+            const badge = document.getElementById('ambient-mail-badge');
+            if (badge) badge.style.display = 'none';
+        };
+
+        // CPU meter per cryptojacking
+        window.startCpuMeter = function() {
+            const meter = document.getElementById('cpu-meter');
+            if (!meter) return;
+            meter.style.display = 'block';
+            let _cpuTimer = setInterval(() => {
+                const val = document.getElementById('cpu-val');
+                const v = Math.min(98, 70 + Math.floor(Math.random()*28));
+                if (val) val.innerText = v;
+                if (v > 90) meter.style.color = '#ff4444';
+                else if (v > 80) meter.style.color = '#ffaa00';
+                else meter.style.color = '#0f0';
+            }, 800);
+            window._cpuMeterTimer = _cpuTimer;
+        };
+        window.stopCpuMeter = function() {
+            const meter = document.getElementById('cpu-meter');
+            if (meter) meter.style.display = 'none';
+            if (window._cpuMeterTimer) clearInterval(window._cpuMeterTimer);
+        };
+
+        // File corruption effect on ransomware
+        window.triggerFileCorruption = function() {
+            document.querySelectorAll('.desktop-icon svg, #window-files svg').forEach(el => {
+                el.classList.add('file-corrupting');
+                setTimeout(() => el.classList.remove('file-corrupting'), 2000);
+            });
+        };
+
         window.runBios = function() {
             const biosText = document.getElementById('bios-text');
             biosText.innerHTML = '';
@@ -1797,6 +2333,10 @@
                 self.iso_phase = 'browse'
                 self.iso_chosen_hash = None
                 self.iso_entered_hash = ''
+                # timer per step
+                self.step_timer_active = False
+                # ambient noise
+                self.ambient_tick = 0
 
         state = GameState()
 
@@ -1906,7 +2446,24 @@ Comandi Terminale utili:
                     'body': 'Ciao, domani aggiornamento dei PC. Nessuna azione richiesta.',
                     'isPhishing': False,
                     'reason': 'Comunicazione interna coerente.'
-                }
+                },
+                # Variante ambigua: sembra legittima ma non lo è
+                {
+                    'subject': 'Conferma accesso account',
+                    'sender': 'noreply@support-microsoft.com',
+                    'body': 'Il tuo account Microsoft è stato verificato con successo. Se non hai effettuato questa operazione clicca qui: https://support-microsoft.com/verify',
+                    'isPhishing': True,
+                    'reason': 'Dominio "support-microsoft.com" NON è microsoft.com — è un sito clone. Il vero dominio Microsoft è microsoft.com.',
+                    'consequence': 'cred'
+                },
+                # Variante ambigua: sembra phishing ma è legittima
+                {
+                    'subject': 'Azione richiesta: rinnova la tua password',
+                    'sender': 'it-security@azienda.it',
+                    'body': 'La tua password scade tra 3 giorni. Accedi al portale aziendale (https://intranet.azienda.it/password) per aggiornarla. Non rispondere a questa email.',
+                    'isPhishing': False,
+                    'reason': 'Mittente interno verificato + HTTPS + URL aziendale corretto + nessuna richiesta di credenziali via email.'
+                },
             ],
             2: [
                 {
@@ -1959,7 +2516,68 @@ Comandi Terminale utili:
             ]
         }
 
-        # --- WEB SCENARI (SITO SICURO VS NON SICURO) ---
+        # --- RANDOMIZZAZIONE EMAIL ---
+        # Pool di varianti per rendere ogni partita diversa
+
+        _phish_domains_l1 = [
+            'amaz0n-support.com', 'arnazon-it.net', 'amazon-sicurezza.ru',
+            'paypa1-verifica.com', 'netfl1x-rinnovo.it', 'apple-id-sicuro.net'
+        ]
+        _phish_names_l1 = [
+            'sicurezza@{d}', 'noreply@{d}', 'alert@{d}', 'supporto@{d}'
+        ]
+        _phish_urgency = [
+            'URGENTE!!', 'ATTENZIONE:', 'AVVISO CRITICO:', 'AZIONE RICHIESTA:'
+        ]
+        _phish_actions = [
+            "Inserisci subito user e pass o perdi l'accesso",
+            "Verifica subito le credenziali per evitare la sospensione",
+            "Accedi immediatamente per proteggere il tuo account",
+            "Conferma i tuoi dati entro 24 ore"
+        ]
+        _banca_domains = [
+            'banca-online.it', 'bancaservizi-it.com', 'bankitalia-secure.net',
+            'unicredit-alert.com', 'intesa-verifica.ru'
+        ]
+        _banca_links = [
+            'http://bit.ly/3XyZ12', 'http://tinyurl.com/banca99',
+            'http://bit.ly/acc-verifica', 'http://rb.gy/bankchk'
+        ]
+
+        def randomize_email(template):
+            """Crea una copia con varianti randomizzate per rigiocabilità."""
+            import copy as _copy
+            e = _copy.deepcopy(template)
+            lvl = state.level
+
+            if lvl == 1:
+                if e.get('isPhishing') and e.get('consequence') == 'cred':
+                    if 'amaz0n' in e.get('sender','') or 'amaz0n' in e.get('body',''):
+                        d = random.choice(_phish_domains_l1)
+                        name_tpl = random.choice(_phish_names_l1)
+                        e['sender'] = name_tpl.format(d=d)
+                        urg = random.choice(_phish_urgency)
+                        act = random.choice(_phish_actions)
+                        e['subject'] = f"{urg} Verifica credenziali subito"
+                        e['body'] = (f"Ciao, il tuo accaunt è stato blocato!! {act}. "
+                                     f"Link: http://{d}/login")
+                    elif 'bit.ly' in e.get('body','') or 'banca' in e.get('sender','').lower():
+                        bd = random.choice(_banca_domains)
+                        bl = random.choice(_banca_links)
+                        e['sender'] = f"security@{bd}"
+                        e['body'] = (f"Abbiamo rilevato un accesso sospetto. "
+                                     f"Verifica ora: {bl}")
+            elif lvl == 3:
+                if e.get('consequence') == 'wire':
+                    amounts = ['3.800', '7.200', '12.500', '4.750', '9.100']
+                    ibans = ['DE89370400440532013000', 'GB29NWBK60161331926819',
+                             'FR7630006000011234567890189', 'IT60X0542811101000000123456']
+                    amt = random.choice(amounts)
+                    iban = random.choice(ibans)
+                    e['body'] = (f"Sono in viaggio e non posso essere raggiunto. "
+                                 f"Serve un bonifico urgente di €{amt} su IBAN: {iban}. "
+                                 f"Non coinvolgere nessuno. Conferma subito.")
+            return e
 
         web_scenarios = {
             1: [
@@ -2265,39 +2883,92 @@ Comandi Terminale utili:
 
         def build_script_steps():
             if state.level == 1:
+                # Randomizza tra varianti per rigiocabilità e ambiguità didattica
+                pool = list(email_by_level[1])
+                random.shuffle(pool)
+                phish  = [e for e in pool if e.get('isPhishing')]
+                legit  = [e for e in pool if not e.get('isPhishing')]
+                p1 = phish[0] if phish else pool[0]
+                # Step 5: 50% chance email legittima (ambiguità)
+                step5_tpl = legit[0] if legit and random.random() > 0.4 else (phish[1] if len(phish)>1 else p1)
                 return [
-                    {'kind':'email', 'hint':'Step 1/6: Apri Posta e valuta l\'email (phishing).', 'template': email_by_level[1][0]},
-                    {'kind':'popup', 'hint':'Step 2/6: Chiudi il pop-up truffa (non cliccare “Riscatta”).'},
-                    {'kind':'web', 'hint':'Step 3/6: Download: analizza i risultati e scegli la fonte più sicura.', 'scenario': _find_web(1, 'Download Documento')},
-                    {'kind':'password', 'hint':'Step 4/6: Crea una password robusta e verificane la sicurezza.'},
-                    {'kind':'email', 'hint':'Step 5/6: Valuta l\'email con link abbreviato (bit.ly).', 'template': email_by_level[1][1]},
-                    {'kind':'wifi', 'hint':'Step 6/6: WiFi pubblico: NON connetterti alla rete aperta.'},
+                    {'kind':'email',    'hint':'Step 1/6: Apri Posta — phishing o legittima?',         'template': p1},
+                    {'kind':'popup',    'hint':'Step 2/6: Chiudi il pop-up truffa (non cliccare "Riscatta").'},
+                    {'kind':'web',      'hint':'Step 3/6: Download: scegli la fonte più sicura.',      'scenario': _find_web(1, 'Download Documento')},
+                    {'kind':'password', 'hint':'Step 4/6: Crea una password robusta.'},
+                    {'kind':'email',    'hint':'Step 5/6: Valuta attentamente — phishing o legittima?', 'template': step5_tpl},
+                    {'kind':'wifi',     'hint':'Step 6/6: WiFi pubblico: NON connetterti alla rete aperta.'},
                 ]
 
             if state.level == 2:
+                # Randomizza ordine web scenarios per varietà
+                web_order = [_find_web(2,'Login Banca'), _find_web(2,'Installazione Codec Video')]
+                random.shuffle(web_order)
                 return [
-                    {'kind':'email', 'hint':'Step 1/8: Spear phishing (email “collega”): analizza e agisci.', 'template': email_by_level[2][0]},
-                    {'kind':'web', 'hint':'Step 2/8: Sito clone: analizza URL e scegli il login corretto.', 'scenario': _find_web(2, 'Login Banca')},
-                    {'kind':'phone', 'hint':'Step 3/8: Telefonata “supporto tecnico”: verifica identità e rifiuta accesso remoto.'},
-                    {'kind':'web', 'hint':'Step 4/8: Software: analizza il download e scegli una fonte ufficiale.', 'scenario': _find_web(2, 'Installazione Codec Video')},
-                    {'kind':'usb', 'hint':'Step 5/8: USB trovata: NON aprire. Scansiona o consegna all\'IT.'},
-                    {'kind':'mitm', 'hint':'Step 6/8: Certificato non valido: controlla i dettagli e ANNULLA.'},
-                    {'kind':'iso', 'hint':'Step 7/8: Verifica integrità ISO Ubuntu: usa sha256sum nel Terminale e confronta l\'hash.'},
-                    {'kind':'session', 'hint':'Step 8/8: Sessione a rischio: termina la sessione.'},
+                    {'kind':'email',  'hint':'Step 1/8: Spear phishing: analizza mittente e link.',  'template': email_by_level[2][0]},
+                    {'kind':'web',    'hint':'Step 2/8: Sito clone: analizza URL e scegli corretto.', 'scenario': web_order[0]},
+                    {'kind':'phone',  'hint':'Step 3/8: Telefonata "supporto tecnico": rifiuta accesso remoto.'},
+                    {'kind':'web',    'hint':'Step 4/8: Download software: scegli fonte ufficiale.',  'scenario': web_order[1]},
+                    {'kind':'usb',    'hint':'Step 5/8: USB trovata: NON aprire. Scansiona o consegna IT.'},
+                    {'kind':'mitm',   'hint':'Step 6/8: Certificato non valido: controlla e ANNULLA.'},
+                    {'kind':'iso',    'hint':'Step 7/8: Verifica integrità ISO Ubuntu nel Terminale.'},
+                    {'kind':'session','hint':'Step 8/8: Sessione a rischio: termina la sessione.'},
                 ]
 
-            # level 3
+            # level 3 — attacker IP e bonifico randomizzati in randomize_email/start_final_attack
             return [
-                {'kind':'email', 'hint':'Step 1/9: CEO fraud: non procedere e segnala.', 'template': email_by_level[3][0]},
-                {'kind':'email', 'hint':'Step 2/9: Supply chain (email update): segnala.', 'template': email_by_level[3][1]},
-                {'kind':'web', 'hint':'Step 3/9: Supply chain (web): verifica prima di installare.', 'scenario': _find_web(3, 'Aggiornamento Software (Supply Chain)')},
-                {'kind':'web', 'hint':'Step 4/9: Zero-day: evita siti/azioni rischiose.', 'scenario': _find_web(3, 'Forum (Zero-day exploit)')},
-                {'kind':'web', 'hint':'Step 5/9: Cryptojacking: evita siti sospetti.', 'scenario': _find_web(3, 'Sito con Cryptojacking')},
-                {'kind':'insider', 'hint':'Step 6/9: Insider threat: apri Terminale e usa lockuser m.neri.'},
-                {'kind':'ransomware', 'hint':'Step 7/9: Ransomware: Terminale → logs → decrypt KEY-XXXX.'},
-                {'kind':'iso', 'hint':'Step 8/9: Verifica integrità ISO Ubuntu: usa sha256sum nel Terminale e confronta l\'hash.'},
-                {'kind':'final', 'hint':'Step 9/9: Attacco finale: Terminale → block <IP>.'},
+                {'kind':'email',     'hint':'Step 1/9: CEO fraud: non procedere e segnala.',             'template': email_by_level[3][0]},
+                {'kind':'email',     'hint':'Step 2/9: Supply chain (email): analizza e segnala.',        'template': email_by_level[3][1]},
+                {'kind':'web',       'hint':'Step 3/9: Supply chain (web): verifica prima di installare.','scenario': _find_web(3,'Aggiornamento Software (Supply Chain)')},
+                {'kind':'web',       'hint':'Step 4/9: Zero-day: evita siti/azioni rischiose.',           'scenario': _find_web(3,'Forum (Zero-day exploit)')},
+                {'kind':'web',       'hint':'Step 5/9: Cryptojacking: evita siti sospetti.',             'scenario': _find_web(3,'Sito con Cryptojacking')},
+                {'kind':'insider',   'hint':'Step 6/9: Insider threat: lockuser m.neri nel Terminale.'},
+                {'kind':'ransomware','hint':'Step 7/9: Ransomware: logs → decrypt KEY-XXXX.'},
+                {'kind':'iso',       'hint':'Step 8/9: Verifica integrità ISO Ubuntu.'},
+                {'kind':'final',     'hint':'Step 9/9: Attacco finale: block <IP> nel Terminale.'},
             ]
+
+        # Durate timer per step (in secondi) — None = nessun timer (step base lv1)
+        STEP_TIMERS = {
+            'email':     {'basic': None, 'intermediate': 90,  'expert': 60},
+            'popup':     {'basic': None, 'intermediate': None, 'expert': None},
+            'web':       {'basic': None, 'intermediate': 75,  'expert': 55},
+            'password':  {'basic': None, 'intermediate': None, 'expert': None},
+            'wifi':      {'basic': None, 'intermediate': None, 'expert': None},
+            'phone':     {'basic': None, 'intermediate': 120, 'expert': 90},
+            'usb':       {'basic': None, 'intermediate': 60,  'expert': 45},
+            'mitm':      {'basic': None, 'intermediate': 50,  'expert': 35},
+            'session':   {'basic': None, 'intermediate': 50,  'expert': 40},
+            'insider':   {'basic': None, 'intermediate': None, 'expert': None},
+            'ransomware':{'basic': None, 'intermediate': None, 'expert': None},
+            'iso':       {'basic': None, 'intermediate': 120, 'expert': 90},
+            'final':     {'basic': None, 'intermediate': None, 'expert': None},
+        }
+
+        def start_step_timer_for(kind):
+            """Avvia il timer per lo step corrente in base al livello."""
+            diff = state.difficulty
+            secs = STEP_TIMERS.get(kind, {}).get(diff, None)
+            if secs is None:
+                try: js.window.stopStepTimer()
+                except Exception: pass
+                return
+
+            def on_timeout():
+                if not state.game_active or state.script_waiting != kind:
+                    return
+                update_integrity(-15)
+                update_score(-40)
+                show_notification('Tempo scaduto!', f'Hai impiegato troppo. -15 integrità.', 'error')
+                try:
+                    js.window.showBriefing(kind)
+                except Exception:
+                    pass
+
+            try:
+                js.window.startStepTimer(secs, create_proxy(on_timeout))
+            except Exception:
+                pass
 
         def script_start():
             state.script_steps = build_script_steps()
@@ -2306,18 +2977,21 @@ Comandi Terminale utili:
             state.script_email_id = None
 
             show_notification('Scenario Lineare', 'Gli eventi arriveranno in ordine (come da guida).', 'success')
-
-            # Avvia dopo un breve delay per lasciare in primo piano il README
             js.setTimeout(create_proxy(script_run_current_step), 900)
 
         def script_complete_step():
             if not state.game_active or not state.script_mode or not state.script_waiting:
                 return
 
+            # ferma timer e badge
+            try:
+                js.window.stopStepTimer()
+                js.window.clearAmbientMail()
+            except Exception:
+                pass
+
             state.script_waiting = None
             state.script_email_id = None
-
-            # sblocca eventuali UI lock
             js.window.__cg_alertLock = False
             js.window.__cg_browserLock = False
             js.window.__cg_mailLock = False
@@ -2330,14 +3004,21 @@ Comandi Terminale utili:
 
             js.setTimeout(create_proxy(script_run_current_step), 850)
 
-        def script_repeat_step(feedback='Scelta non corretta. Riprova.'):
+        def script_repeat_step(feedback='Scelta non corretta. Riprova.', kind=None):
             if not state.game_active or not state.script_mode:
                 return
+            try:
+                js.window.stopStepTimer()
+            except Exception:
+                pass
             show_notification('Riprova', feedback, 'error')
-            js.setTimeout(create_proxy(script_run_current_step), 650)
+            # mostra briefing educativo se abbiamo il kind
+            if kind:
+                js.setTimeout(create_proxy(lambda: js.window.showBriefing(kind)), 300)
+            js.setTimeout(create_proxy(script_run_current_step), 650 if not kind else 400)
 
         def deliver_email(template):
-            email = template.copy()
+            email = randomize_email(template)
             email['id'] = int(datetime.datetime.now().timestamp() * 1000) + random.randint(0, 999)
             email['read'] = False
             email['timestamp'] = datetime.datetime.now().strftime('%H:%M')
@@ -2345,6 +3026,11 @@ Comandi Terminale utili:
             email['clues'] = generate_email_clues(email)
             state.emails.insert(0, email)
             render_email_list()
+            # mostra badge notifica sull'icona Posta
+            try:
+                js.window.triggerAmbientMail()
+            except Exception:
+                pass
             return email
 
         def script_run_current_step():
@@ -2359,10 +3045,12 @@ Comandi Terminale utili:
             step = state.script_steps[state.script_step_idx]
             total = len(state.script_steps)
             set_step_ui(state.script_step_idx + 1, total, step.get('hint', ''))
-
             show_notification('Obiettivo', step.get('hint',''), 'info')
 
             kind = step['kind']
+
+            # avvia timer per questo step
+            start_step_timer_for(kind)
 
             if kind == 'email':
                 e = deliver_email(step['template'])
@@ -2374,7 +3062,6 @@ Comandi Terminale utili:
                     js.window.sfxMail()
                 except Exception:
                     pass
-                # porta in primo piano la Posta per rendere lo step più immediato
                 js.window.openWindow('mail')
 
             elif kind == 'popup':
@@ -2511,6 +3198,38 @@ Comandi Terminale utili:
             t_clock = js.setInterval(create_proxy(update_clock), 1000)
             state.timers.append(t_clock)
 
+            # Ambient noise loop: email di rumore di fondo (lv2+ ogni ~35s, lv3 ogni ~20s)
+            if state.level >= 2:
+                ambient_interval = 20000 if state.level == 3 else 35000
+                ambient_emails = [
+                    {'sender': 'newsletter@promo-shop.it',  'subject': 'Offerta imperdibile oggi!',          'isPhishing': False, 'reason': 'Spam commerciale.', 'consequence': None},
+                    {'sender': 'hr@azienda.it',              'subject': 'Reminder: riunione domani 9:00',     'isPhishing': False, 'reason': 'Comunicazione interna.',  'consequence': None},
+                    {'sender': 'it-support@azienda.it',     'subject': 'Aggiornamento patch programmato',    'isPhishing': False, 'reason': 'IT interno legittimo.', 'consequence': None},
+                    {'sender': 'noreply@linkedin.com',      'subject': 'Hai 3 nuove richieste di contatto', 'isPhishing': False, 'reason': 'Notifica sociale.', 'consequence': None},
+                    {'sender': 'ordini@amazon.it',          'subject': 'Il tuo ordine è stato spedito',     'isPhishing': False, 'reason': 'Conferma ordine normale.', 'consequence': None},
+                ]
+
+                def ambient_tick_fn():
+                    if not state.game_active:
+                        return
+                    tpl = random.choice(ambient_emails)
+                    import copy as _copy
+                    e = _copy.deepcopy(tpl)
+                    e['id'] = int(datetime.datetime.now().timestamp() * 1000) + random.randint(0,999)
+                    e['read'] = False
+                    e['timestamp'] = datetime.datetime.now().strftime('%H:%M')
+                    e['analysis_ok'] = True   # non bloccante
+                    e['clues'] = []
+                    state.emails.append(e)
+                    render_email_list()
+                    try:
+                        js.window.triggerAmbientMail()
+                    except Exception:
+                        pass
+
+                t_amb = js.setInterval(create_proxy(ambient_tick_fn), ambient_interval)
+                state.timers.append(t_amb)
+
             show_notification('Sistema Online', f'Livello {state.level} avviato. Segui i passi nel README.', 'success')
             script_start()
 
@@ -2558,144 +3277,183 @@ Comandi Terminale utili:
             render_email_list()
 
             content = document.getElementById('email-content')
-            reason_html = ''
-            if email.get('reason'):
-                reason_html = f"<div class='text-[11px] text-gray-600 mt-2'><b>Nota:</b> {email['reason']}</div>"
+            eid = email['id']
+            clues = email.get('clues', [])
 
-            # clues UI
-            clue_html = ''
-            for i, (txt, is_bad) in enumerate(email.get('clues', [])):
-                clue_html += f"""
-                    <label class='flex items-start gap-2'>
-                        <input id='clue-{email['id']}-{i}' type='checkbox' class='mt-0.5'/>
-                        <span class='text-[11px]'>{txt}</span>
-                    </label>
-                """
+            # Estrae keyword cercabile nel testo dell'email dall'indizio
+            def extract_keyword(clue_txt):
+                txt = clue_txt.lower()
+                if '(' in txt and ')' in txt:
+                    s = txt.index('(') + 1
+                    e = txt.index(')')
+                    return txt[s:e].strip()
+                for kw in ['bit.ly','http://','https://','urgente','subito','immediat',
+                           'bonifico','iban','password','pass','credenzial','amaz0n',
+                           'banca','login','verifica','accaunt','accesso','@',
+                           'entro oggi','non coinvolgere','update.exe','patch','vendor']:
+                    if kw in txt:
+                        return kw
+                words = clue_txt.split()
+                return ' '.join(words[-2:]) if len(words) >= 2 else clue_txt
+
+            # Avvolge token nel testo con span cliccabili
+            def make_highlighted(text, clues_list):
+                safe = text.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;')
+                used = set()
+                for i, (clue_txt, is_bad) in enumerate(clues_list):
+                    kw = extract_keyword(clue_txt)
+                    if not kw or len(kw) < 2 or i in used:
+                        continue
+                    kw_esc = kw.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;')
+                    lo = safe.lower()
+                    pos = lo.find(kw_esc.lower())
+                    if pos >= 0 and '<span' not in safe[max(0,pos-15):pos+len(kw_esc)+15]:
+                        chunk = safe[pos:pos+len(kw_esc)]
+                        ctype = 'bad' if is_bad else 'good'
+                        title = clue_txt.replace('"',"'")
+                        rep = (f'<span class="email-clue" data-clue-idx="{i}" '
+                               f'data-clue-type="{ctype}" data-clue-txt="{title}">' + chunk + '</span>')
+                        safe = safe[:pos] + rep + safe[pos+len(kw_esc):]
+                        used.add(i)
+                return safe
+
+            body_h   = make_highlighted(email.get('body',''),   clues)
+            sender_h = make_highlighted(email.get('sender',''), clues)
+            subj_h   = make_highlighted(email.get('subject',''),clues)
 
             content.innerHTML = f"""
-                <div class='mb-3 border-b border-gray-400 pb-2 bg-white p-2 border border-gray-400 shadow-sm'>
-                    <h2 class='text-lg font-bold text-blue-900'>{email['subject']}</h2>
-                    <div class='text-xs text-gray-700'>Da: <span class='mono bg-yellow-100 px-1 border border-gray-300'>{email['sender']}</span></div>
+                <div style="background:#000080;color:#fff;padding:4px 8px;font-size:12px;font-weight:bold;">
+                    📧 Nuova email ricevuta
                 </div>
-                <div class='flex-1 overflow-y-auto mb-3 text-sm leading-relaxed p-2 bg-white border border-gray-400 h-44'>
-                    {email['body']}
-                    {reason_html}
-                </div>
-
-                <div class='bg-yellow-50 border border-gray-400 p-2 mb-3'>
-                    <div class='text-xs font-bold'>Analisi Rapida (interattiva)</div>
-                    <div class='text-[11px] text-gray-700'>Seleziona gli indizi e scegli una classificazione. Poi clicca <b>Conferma analisi</b>.</div>
-
-                    <div class='mt-2 flex gap-4 text-xs'>
-                        <label class='inline-flex items-center gap-2'>
-                            <input id='cls-phish-{email['id']}' type='radio' name='cls-{email['id']}'/>
-                            Phishing
-                        </label>
-                        <label class='inline-flex items-center gap-2'>
-                            <input id='cls-safe-{email['id']}' type='radio' name='cls-{email['id']}'/>
-                            Legittima
-                        </label>
-                    </div>
-
-                    <div class='mt-2 grid grid-cols-1 gap-1'>
-                        {clue_html}
-                    </div>
-
-                    <div class='mt-2 flex items-center gap-2'>
-                        <button id='btn-analyze-{email['id']}' class='retro-btn px-3 py-1 text-xs font-bold'>Conferma analisi</button>
-                        <div id='analysis-result-{email['id']}' class='text-xs font-bold'></div>
+                <div style="background:#c0c0c0;border:2px solid;border-color:#fff #808080 #808080 #fff;padding:6px 8px;margin-bottom:6px;">
+                    <div style="font-size:13px;font-weight:bold;color:#000060;">{subj_h}</div>
+                    <div style="font-size:11px;color:#444;margin-top:2px;">Da:
+                        <span style="background:#fffbe6;border:1px solid #ccc;padding:0 4px;font-family:monospace;">{sender_h}</span>
                     </div>
                 </div>
-
-                <div class='flex gap-2 mt-auto'>
-                    <button id='btn-report-{email['id']}' class='retro-btn flex-1 py-2 font-bold text-red-900 opacity-60' disabled>Segnala Phishing</button>
-                    <button id='btn-safe-{email['id']}' class='retro-btn flex-1 py-2 font-bold text-green-900 opacity-60' disabled>Segna come Sicuro</button>
+                <div id="email-body-{eid}" style="background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;
+                     padding:8px;font-size:12px;line-height:1.8;margin-bottom:6px;
+                     min-height:80px;max-height:130px;overflow-y:auto;
+                     user-select:none;-webkit-user-select:none;cursor:default;">
+                    {body_h}
+                </div>
+                <div style="background:#e8f4ff;border:1px solid #aac8ff;padding:4px 8px;font-size:11px;color:#003080;margin-bottom:5px;">
+                    🔍 <b>Clicca</b> sulle parole sospette per evidenziarle. Trova almeno <b>2 indizi</b>, poi dai il verdetto.
+                </div>
+                <div style="margin-bottom:5px;">
+                    <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:bold;margin-bottom:2px;">
+                        <span>Indizi trovati</span>
+                        <span id="clue-count-{eid}">0 trovati</span>
+                    </div>
+                    <div style="background:#d0d0d0;border:1px solid #999;height:7px;border-radius:2px;overflow:hidden;">
+                        <div id="clue-bar-{eid}" class="scanner-bar" style="width:0%;"></div>
+                    </div>
+                </div>
+                <div id="clue-pills-{eid}" style="min-height:20px;margin-bottom:5px;display:flex;flex-wrap:wrap;gap:2px;">
+                    <span style="font-size:10px;color:#888;font-style:italic;">Nessun indizio ancora...</span>
+                </div>
+                <div id="verdict-area-{eid}">
+                    <div style="font-size:10px;font-weight:bold;color:#555;margin-bottom:3px;">VERDETTO:</div>
+                    <div style="display:flex;gap:5px;">
+                        <button id="btn-phish-{eid}" class="verdict-btn verdict-phish locked" disabled>
+                            🚨 PHISHING<br><span style="font-size:10px;font-weight:normal;">Segnala e cestina</span>
+                        </button>
+                        <button id="btn-legit-{eid}" class="verdict-btn verdict-safe locked" disabled>
+                            ✅ LEGITTIMA<br><span style="font-size:10px;font-weight:normal;">Segna come sicura</span>
+                        </button>
+                    </div>
+                    <div id="verdict-feedback-{eid}" style="margin-top:4px;font-size:11px;font-weight:bold;min-height:14px;"></div>
                 </div>
             """
 
-            def unlock_actions():
-                b1 = document.getElementById(f"btn-report-{email['id']}")
-                b2 = document.getElementById(f"btn-safe-{email['id']}")
-                if b1:
-                    b1.disabled = False
-                    b1.classList.remove('opacity-60')
-                if b2:
-                    b2.disabled = False
-                    b2.classList.remove('opacity-60')
+            found_clues   = {}
+            analysis_done = [False]
+            required      = 2
 
-            def analyze(ev=None):
-                # verifica classificazione + qualità indizi
-                chosen_phish = bool(document.getElementById(f"cls-phish-{email['id']}").checked)
-                chosen_safe = bool(document.getElementById(f"cls-safe-{email['id']}").checked)
-
-                if not (chosen_phish or chosen_safe):
-                    show_notification('Analisi', 'Seleziona una classificazione (Phishing/Legittima).', 'error')
-                    return
-
-                selected_bad = 0
-                selected_good = 0
-
-                for i, (_txt, is_bad) in enumerate(email.get('clues', [])):
-                    cb = document.getElementById(f"clue-{email['id']}-{i}")
-                    if cb and cb.checked:
-                        if is_bad:
-                            selected_bad += 1
+            def update_clue_ui():
+                bad_n  = sum(1 for _,ib in found_clues.values() if ib)
+                good_n = sum(1 for _,ib in found_clues.values() if not ib)
+                pct = min(100, int(bad_n / required * 100)) if email.get('isPhishing') else min(100, int(good_n / required * 100))
+                bar = document.getElementById(f"clue-bar-{eid}")
+                cnt = document.getElementById(f"clue-count-{eid}")
+                if bar: bar.style.width = f"{pct}%"
+                if cnt: cnt.innerText = f"{bad_n} ⚠ sospetti · {good_n} ✓ sicuri"
+                pills_el = document.getElementById(f"clue-pills-{eid}")
+                if pills_el:
+                    ph = ''
+                    for ci,(ct,cib) in found_clues.items():
+                        cls = 'clue-pill clue-pill-bad' if cib else 'clue-pill clue-pill-good'
+                        ico = '⚠️' if cib else '✓'
+                        ph += f"<span class='{cls}'>{ico} {ct[:28]}</span>"
+                    pills_el.innerHTML = ph or "<span style='font-size:10px;color:#888;font-style:italic;'>Nessun indizio ancora...</span>"
+                enough = bad_n >= required or good_n >= required
+                for bid in [f"btn-phish-{eid}", f"btn-legit-{eid}"]:
+                    btn = document.getElementById(bid)
+                    if btn:
+                        if enough:
+                            btn.disabled = False
+                            btn.classList.remove('locked')
                         else:
-                            selected_good += 1
+                            btn.disabled = True
+                            btn.classList.add('locked')
 
-                # regole: se dici Phishing → seleziona almeno 2 indizi sospetti e 0 indizi "buoni"
-                #         se dici Legittima → seleziona almeno 2 indizi buoni e 0 sospetti
-                evidence_ok = False
-                if chosen_phish:
-                    evidence_ok = (selected_bad >= 2 and selected_good == 0)
+            def on_clue_click(ev):
+                if analysis_done[0]: return
+                el = ev.target
+                while el and not el.classList.contains('email-clue'):
+                    el = el.parentElement
+                if not el: return
+                idx   = int(el.getAttribute('data-clue-idx'))
+                ctype = el.getAttribute('data-clue-type')
+                ctxt  = el.getAttribute('data-clue-txt')
+                is_bad = (ctype == 'bad')
+                if idx in found_clues:
+                    del found_clues[idx]
+                    el.classList.remove('found-bad','found-good')
                 else:
-                    evidence_ok = (selected_good >= 2 and selected_bad == 0)
+                    found_clues[idx] = (ctxt, is_bad)
+                    el.classList.add('found-bad' if is_bad else 'found-good')
+                    try:
+                        js.window.sfxCorrect()
+                    except Exception:
+                        pass
+                    tip = document.createElement('div')
+                    tip.className = 'clue-tooltip'
+                    tip.innerText = ('⚠️ ' if is_bad else '✓ ') + ctxt[:55]
+                    tip.style.left = f"{int(ev.clientX)+10}px"
+                    tip.style.top  = f"{int(ev.clientY)-34}px"
+                    document.body.appendChild(tip)
+                    js.setTimeout(create_proxy(lambda e2=None: tip.remove()), 1700)
+                update_clue_ui()
 
-                correct = (chosen_phish and email.get('isPhishing')) or (chosen_safe and (not email.get('isPhishing')))
+            def on_verdict(action):
+                if analysis_done[0]: return
+                bad_n  = sum(1 for _,ib in found_clues.values() if ib)
+                good_n = sum(1 for _,ib in found_clues.values() if not ib)
+                if bad_n < required and good_n < required:
+                    show_notification('Trova altri indizi',
+                        f'Hai bisogno di almeno {required} indizi. Clicca sul testo!', 'error')
+                    return
+                analysis_done[0] = True
+                email['analysis_ok'] = True
+                handle_email_action(eid, action)
 
-                res = document.getElementById(f"analysis-result-{email['id']}")
+            body_el = document.getElementById(f"email-body-{eid}")
+            if body_el:
+                pCl = create_proxy(on_clue_click)
+                state.proxy_refs.append(pCl)
+                body_el.addEventListener('click', pCl)
 
-                if correct and evidence_ok:
-                    email['analysis_ok'] = True
-                    if res:
-                        res.innerText = 'Analisi OK.'
-                        res.style.color = '#0a6b0a'
-                    show_notification('Analisi completata', 'Ora puoi scegliere Segnala/Sicuro.', 'success')
-                    unlock_actions()
-                else:
-                    # piccola penalità per rendere “game”
-                    update_score(-10)
-                    if res:
-                        res.innerText = 'Analisi non convincente: rivedi gli indizi.'
-                        res.style.color = '#b00000'
-                    show_notification('Analisi', 'Indizi/classificazione non coerenti. Riprova.', 'error')
-
-            def on_report(ev=None):
-                handle_email_action(email['id'], 'report')
-
-            def on_safe(ev=None):
-                handle_email_action(email['id'], 'safe')
-
-            pA = create_proxy(analyze)
-            p1 = create_proxy(on_report)
-            p2 = create_proxy(on_safe)
-            state.proxy_refs.extend([pA, p1, p2])
-
-            document.getElementById(f"btn-analyze-{email['id']}").onclick = pA
-            document.getElementById(f"btn-report-{email['id']}").onclick = p1
-            document.getElementById(f"btn-safe-{email['id']}").onclick = p2
-
-            # Enter per confermare analisi
-            def on_key(ev):
-                if ev.key == 'Enter':
-                    analyze()
-
-            pK = create_proxy(on_key)
-            state.proxy_refs.append(pK)
-            content.addEventListener('keydown', pK)
-            # rende focusabile per ricevere keydown
-            content.setAttribute('tabindex', '0')
-            content.focus()
+            def on_phish(ev=None): on_verdict('report')
+            def on_legit(ev=None): on_verdict('safe')
+            pP = create_proxy(on_phish)
+            pL = create_proxy(on_legit)
+            state.proxy_refs.extend([pP, pL])
+            bp = document.getElementById(f"btn-phish-{eid}")
+            bl = document.getElementById(f"btn-legit-{eid}")
+            if bp: bp.onclick = pP
+            if bl: bl.onclick = pL
+            update_clue_ui()
 
         def handle_email_action(email_id, action):
             email = next((e for e in state.emails if e['id'] == email_id), None)
@@ -2755,7 +3513,7 @@ Comandi Terminale utili:
                 else:
                     state.script_waiting = None
                     state.script_email_id = None
-                    script_repeat_step('Azione errata sull\'email. Riprova valutandola con attenzione.')
+                    script_repeat_step('Azione errata sull\'email. Riprova valutandola con attenzione.', kind='email')
 
         # --- WEB SCENARIO (PIÙ INTERATTIVO) ---
 
@@ -2907,10 +3665,14 @@ Comandi Terminale utili:
 
                 if state.script_waiting == 'web':
                     state.script_waiting = None
-                    script_repeat_step('Per continuare devi scegliere la fonte più sicura (HTTPS/ufficiale/verificata).')
+                    script_repeat_step('Per continuare devi scegliere la fonte più sicura (HTTPS/ufficiale/verificata).', kind='web')
 
         def start_cryptojack_damage():
             show_notification('Prestazioni', 'Uso CPU anomalo rilevato (possibile mining).', 'error')
+            try:
+                js.window.startCpuMeter()
+            except Exception:
+                pass
 
             ticks = {'n': 0}
 
@@ -2921,6 +3683,10 @@ Comandi Terminale utili:
                 update_integrity(-3)
                 if ticks['n'] >= 6:
                     js.clearInterval(timer)
+                    try:
+                        js.window.stopCpuMeter()
+                    except Exception:
+                        pass
 
             timer = js.setInterval(create_proxy(dmg), 1200)
             state.timers.append(timer)
@@ -2952,7 +3718,7 @@ Comandi Terminale utili:
                     pass
                 if state.script_waiting == 'popup':
                     state.script_waiting = None
-                    script_repeat_step('Dovevi chiudere il pop-up senza riscattare.')
+                    script_repeat_step('Dovevi chiudere il pop-up senza riscattare.', kind='popup')
 
             def correct():
                 js.window.closeWindow('alert')
@@ -3021,7 +3787,7 @@ Comandi Terminale utili:
                     pass
                 if state.script_waiting == 'wifi':
                     state.script_waiting = None
-                    script_repeat_step('Per continuare evita la rete OPEN. Scegli Hotspot o Ignora.')
+                    script_repeat_step('Per continuare evita la rete OPEN. Scegli Hotspot o Ignora.', kind='wifi')
 
             elif choice == 'hotspot':
                 state.on_public_wifi = False
@@ -3076,7 +3842,7 @@ Comandi Terminale utili:
                     pass
                 if state.script_waiting == 'usb':
                     state.script_waiting = None
-                    script_repeat_step('Hai aperto la USB: riprova scegliendo scansione o consegna IT.')
+                    script_repeat_step('Hai aperto la USB: riprova scegliendo scansione o consegna IT.', kind='usb')
 
             def deliver_it():
                 js.window.closeWindow('alert')
@@ -3254,7 +4020,7 @@ Comandi Terminale utili:
                                             pass
                                         if state.script_waiting == 'phone':
                                             state.script_waiting = None
-                                            script_repeat_step('Sei caduto in una truffa telefonica. Riprova!')
+                                            script_repeat_step('Sei caduto in una truffa telefonica. Riprova!', kind='phone')
                                 js.setTimeout(create_proxy(proceed), 1200)
                             else:
                                 # disabilita i pulsanti dopo la scelta
@@ -3303,7 +4069,7 @@ Comandi Terminale utili:
                     pass
                 if state.script_waiting == 'mitm':
                     state.script_waiting = None
-                    script_repeat_step('Dovevi ANNULLARE: certificato non valido = rischio MITM.')
+                    script_repeat_step('Dovevi ANNULLARE: certificato non valido = rischio MITM.', kind='mitm')
 
             def correct():
                 js.window.closeWindow('alert')
@@ -3386,7 +4152,7 @@ Comandi Terminale utili:
                 pass
             if state.script_waiting == 'session':
                 state.script_waiting = None
-                script_repeat_step('Per continuare devi TERMINARE la sessione a rischio.')
+                script_repeat_step('Per continuare devi TERMINARE la sessione a rischio.', kind='session')
 
         # --- ISO HASH VERIFY ---
 
@@ -3614,7 +4380,7 @@ Comandi Terminale utili:
                 pass
             if state.script_waiting == 'iso':
                 state.script_waiting = None
-                script_repeat_step('ISO compromessa. Riprova scegliendo la fonte corretta!')
+                script_repeat_step('ISO compromessa. Riprova scegliendo la fonte corretta!', kind='iso')
 
         def _iso_complete():
             update_score(150)
@@ -3781,6 +4547,14 @@ Comandi Terminale utili:
             document.getElementById('ransom-overlay').classList.remove('hidden')
             js.window.openWindow('ransomware')
             show_notification('ALLERTA CRITICA', 'Ransomware attivo: file criptati.', 'error')
+
+            # Effetto visivo: icone file che "si corrompono"
+            try:
+                js.window.triggerFileCorruption()
+                js.window.sfxAlert()
+                js.window.flashScreen('red')
+            except Exception:
+                pass
 
             def damage_loop():
                 if state.is_ransomware_active:
@@ -4051,32 +4825,63 @@ Comandi Terminale utili:
                     pass
             state.timers = []
 
+        def cleanup_ambient():
+            try:
+                js.window.stopStepTimer()
+                js.window.stopCpuMeter()
+                js.window.clearAmbientMail()
+            except Exception:
+                pass
+
+        # Helper per passare il debriefLog da JS a Python in modo sicuro
+        def _get_debrief_log_js():
+            """Ritorna il log debrief come lista dicts leggibile da showStatsScreen."""
+            try:
+                # Legge direttamente l'array JS e lo converte
+                raw_log = js.window._debriefLog
+                result = []
+                for i in range(int(raw_log.length)):
+                    item = raw_log[i]
+                    result.append({
+                        'step':    int(item.step)    if hasattr(item,'step') else i,
+                        'kind':    str(item.kind)    if hasattr(item,'kind') else '',
+                        'correct': bool(item.correct) if hasattr(item,'correct') else False,
+                        'detail':  str(item.detail)  if hasattr(item,'detail') else '',
+                        'tip':     str(item.tip)     if hasattr(item,'tip') else '',
+                    })
+                return result
+            except Exception:
+                return []
+
         def game_over():
             state.game_active = False
             stop_all_timers()
+            cleanup_ambient()
             try:
                 js.window.sfxGameOver()
                 js.window.flashScreen('red')
             except Exception:
                 pass
-            # mostra prima end-screen classica, poi dopo 2s apre debrief
             document.getElementById('end-screen').classList.remove('hidden')
             document.getElementById('end-header-color').style.background = 'linear-gradient(90deg, #800000, #ff0000)'
-            document.getElementById('end-title').innerText = 'SISTEMA COMPROMESSO'
-            document.getElementById('end-title').className = 'text-4xl font-bold mb-4 text-red-700'
+            document.getElementById('end-title').innerText = '💀 SISTEMA COMPROMESSO'
+            document.getElementById('end-title').className = 'text-3xl font-bold mb-4 text-red-700'
             document.getElementById('end-message').innerText = "L'integrità è scesa a zero. La simulazione termina qui."
             document.getElementById('end-score').innerText = f"Punteggio Finale: {state.score}"
-            def open_debrief():
+
+            def open_stats():
                 document.getElementById('end-screen').classList.add('hidden')
+                log = _get_debrief_log_js()
                 try:
-                    js.window.showDebrief(False, state.score, state.integrity)
+                    js.window.showStatsScreen(False, state.score, state.integrity, log)
                 except Exception:
                     pass
-            js.setTimeout(create_proxy(open_debrief), 2200)
+            js.setTimeout(create_proxy(open_stats), 2000)
 
         def game_win():
             state.game_active = False
             stop_all_timers()
+            cleanup_ambient()
             try:
                 js.window.sfxLevelUp()
                 js.window.flashScreen('green')
@@ -4084,17 +4889,46 @@ Comandi Terminale utili:
                 pass
             document.getElementById('end-screen').classList.remove('hidden')
             document.getElementById('end-header-color').style.background = 'linear-gradient(90deg, #005500, #00cc00)'
-            document.getElementById('end-title').innerText = 'MISSIONE COMPIUTA! 🏆'
-            document.getElementById('end-title').className = 'text-4xl font-bold mb-4 text-green-700'
-            document.getElementById('end-message').innerText = 'Hai completato tutti gli step del livello. Ottimo lavoro!'
+            document.getElementById('end-title').innerText = '🏆 MISSIONE COMPIUTA!'
+            document.getElementById('end-title').className = 'text-3xl font-bold mb-4 text-green-700'
+            document.getElementById('end-message').innerText = 'Hai completato tutti gli step. Eccellente!'
             document.getElementById('end-score').innerText = f"Punteggio Finale: {state.score}"
-            def open_debrief():
+
+            def open_stats():
                 document.getElementById('end-screen').classList.add('hidden')
+                log = _get_debrief_log_js()
                 try:
-                    js.window.showDebrief(True, state.score, state.integrity)
+                    js.window.showStatsScreen(True, state.score, state.integrity, log)
                 except Exception:
                     pass
-            js.setTimeout(create_proxy(open_debrief), 2200)
+            js.setTimeout(create_proxy(open_stats), 2000)
+            state.game_active = False
+            stop_all_timers()
+            cleanup_ambient()
+            try:
+                js.window.sfxGameOver()
+                js.window.flashScreen('red')
+            except Exception:
+                pass
+            # Breve end-screen, poi apre stats screen completa
+            document.getElementById('end-screen').classList.remove('hidden')
+            document.getElementById('end-header-color').style.background = 'linear-gradient(90deg, #800000, #ff0000)'
+            document.getElementById('end-title').innerText = '💀 SISTEMA COMPROMESSO'
+            document.getElementById('end-title').className = 'text-3xl font-bold mb-4 text-red-700'
+            document.getElementById('end-message').innerText = "L'integrità è scesa a zero. La simulazione termina qui."
+            document.getElementById('end-score').innerText = f"Punteggio Finale: {state.score}"
+
+            def open_stats():
+                document.getElementById('end-screen').classList.add('hidden')
+                try:
+                    log = _get_debrief_log_js()
+                    js.window.showStatsScreen(False, state.score, state.integrity, log)
+                except Exception:
+                    try:
+                        js.window.showDebrief(False, state.score, state.integrity)
+                    except Exception:
+                        pass
+            js.setTimeout(create_proxy(open_stats), 2000)
 
         # --- EXPOSE TO JS ---
 
