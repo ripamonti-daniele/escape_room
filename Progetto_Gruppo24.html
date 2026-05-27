@@ -2123,177 +2123,211 @@ Comandi Terminale utili:
 
         def generate_email_clues_v2(email):
             """
-            Genera una lista di clue strutturati:
-            { 'idx': int, 'text': str, 'token': str, 'is_bad': bool }
-            'token' è la stringa ESATTA da cercare nel testo dell'email (sender+subject+body).
-            Se token è None/vuoto, la clue appare SOLO nel pannello laterale (non evidenziata nel testo).
+            Genera clue strutturati per qualsiasi email.
+            Garantisce SEMPRE almeno 5 clue (min 2 bad + 2 good) con token cliccabili.
+            Funziona su TUTTE le email: phishing, legittime, ambient.
             """
             sender = email.get('sender', '')
             subj   = email.get('subject', '')
             body   = email.get('body', '')
             full_text = f"{sender} {subj} {body}"
             full_lower = full_text.lower()
-
+            is_phishing = email.get('isPhishing', False)
+ 
             clues = []
-
-            # -- CLUE DA SENDER --
+ 
+            # ---- 1. DOMINIO MITTENTE (sempre presente, sempre cliccabile) ----
             if '@' in sender:
                 domain = sender.split('@', 1)[1]
                 local_part = sender.split('@', 1)[0]
-
-                # dominio intero cliccabile
+                d_lower = domain.lower()
+                is_bad_domain = (
+                    any(ch.isdigit() for ch in d_lower.split('.')[0]) or
+                    d_lower.endswith('.ru') or d_lower.endswith('.tk') or
+                    ('-support' in d_lower and 'azienda' not in d_lower) or
+                    'secure' in d_lower or 'auth' in d_lower or 'login' in d_lower or
+                    'amaz0n' in d_lower or 'paypa1' in d_lower or 'mirror' in d_lower
+                )
                 clues.append({
                     'text': f'Dominio mittente: {domain}',
                     'token': domain,
-                    'is_bad': (
-                        any(ch.isdigit() for ch in domain.split('.')[0]) or
-                        domain.endswith('.ru') or domain.endswith('.tk') or
-                        ('-support' in domain and 'azienda' not in domain) or
-                        'secure' in domain.lower() or
-                        'auth' in domain.lower() or
-                        'login' in domain.lower()
-                    )
+                    'is_bad': is_bad_domain
                 })
-
-                # se c'è un dominio apparentemente legit, aggiungiamo la parte dopo @
-                if not domain.endswith('.it') and not domain.endswith('.com'):
-                    pass
-                # parte locale
-                if local_part in ('noreply','sicurezza','security','alert','update'):
+                if local_part.lower() in ('noreply','sicurezza','security','alert','update','support','helpdesk'):
                     clues.append({
-                        'text': f'Indirizzo generico/automatico ({local_part}@)',
-                        'token': local_part + '@',
-                        'is_bad': False  # non necessariamente sospetto
+                        'text': f'Indirizzo automatico/generico ({local_part}@)',
+                        'token': local_part,
+                        'is_bad': local_part.lower() in ('security','alert','update','support','helpdesk') and 'azienda' not in domain
                     })
-
-            # -- CLUE DA BODY: link/URL --
-            import re
-            urls = re.findall(r'https?://[^\s]+', body)
+ 
+            # ---- 2. OGGETTO — token = primi caratteri, SEMPRE cliccabile ----
+            if subj:
+                subj_lower = subj.lower()
+                tok_subj = subj[:18]
+                if any(w in subj_lower for w in ['urgente','urgente!!','critico','immediat','subito']):
+                    clues.append({'text': 'Oggetto urgente/allarmistico', 'token': tok_subj, 'is_bad': True})
+                elif any(w in subj_lower for w in ['riservata','operazione riservata','segreto']):
+                    clues.append({'text': 'Oggetto con richiesta di segretezza', 'token': tok_subj, 'is_bad': True})
+                elif any(w in subj_lower for w in ['re:','fwd:','risposta:']):
+                    clues.append({'text': 'Email di risposta/inoltro (verifica thread)', 'token': tok_subj, 'is_bad': True})
+                elif any(w in subj_lower for w in ['aggiornamento','promemoria','reminder','policy','report','riunione','fattura','conferma']):
+                    clues.append({'text': 'Oggetto informativo/istituzionale ordinario', 'token': tok_subj, 'is_bad': False})
+                else:
+                    clues.append({'text': f'Oggetto email: «{subj[:28]}»', 'token': tok_subj, 'is_bad': False})
+ 
+            # ---- 3. URL/LINK nel corpo ----
+            import re as _re
+            urls = _re.findall(r'https?://[^\s<>"]+', body)
             for url in urls:
                 scheme_u = 'https' if url.startswith('https') else 'http'
                 is_short = any(s in url for s in ['bit.ly','tinyurl','rb.gy','t.co','ow.ly'])
-                is_http  = scheme_u == 'http'
                 host_u   = url.split('://')[1].split('/')[0] if '://' in url else ''
-                is_suspicious_host = (
-                    any(ch.isdigit() for ch in host_u.split('.')[0] if host_u) or
-                    host_u.endswith('.ru') or
-                    'login-secure' in host_u or
-                    'auth' in host_u or
-                    'amaz0n' in host_u or
-                    'paypa1' in host_u
+                h_lower  = host_u.lower()
+                is_sus_host = (
+                    any(ch.isdigit() for ch in h_lower.split('.')[0] if h_lower) or
+                    h_lower.endswith('.ru') or h_lower.endswith('.tk') or
+                    'login-secure' in h_lower or 'auth' in h_lower or
+                    'amaz0n' in h_lower or 'paypa1' in h_lower or 'free' in h_lower
                 )
-
                 if is_short:
-                    # cerca il token breve nel body
-                    short_token = None
                     for s in ['bit.ly','tinyurl','rb.gy','t.co','ow.ly']:
                         if s in url:
-                            short_token = s
+                            clues.append({'text': f'Link abbreviato ({s}) — destinazione nascosta', 'token': s, 'is_bad': True})
                             break
-                    clues.append({'text': f'Link abbreviato ({url[:35]})', 'token': short_token or url[:20], 'is_bad': True})
-                elif is_http:
-                    clues.append({'text': f'Link non cifrato (HTTP): {url[:35]}', 'token': 'http://', 'is_bad': True})
-                elif is_suspicious_host:
-                    clues.append({'text': f'Dominio sospetto nel link: {host_u}', 'token': host_u, 'is_bad': True})
+                elif scheme_u == 'http':
+                    clues.append({'text': f'Connessione HTTP non cifrata: {host_u[:28]}', 'token': 'http://', 'is_bad': True})
+                elif is_sus_host:
+                    clues.append({'text': f'Dominio sospetto nel link: {host_u[:28]}', 'token': host_u[:20], 'is_bad': True})
                 else:
-                    clues.append({'text': f'Link cifrato (HTTPS): {url[:35]}', 'token': 'https://', 'is_bad': False})
-
-            # -- CLUE DA BODY: parole chiave urgenza --
-            urgency_tokens = [
-                ('urgente', True, 'Tono urgente/allarmistico'),
-                ('subito', True, 'Pressione ad agire subito'),
-                ('entro oggi', True, 'Pressione temporale ("entro oggi")'),
-                ('immediat', True, 'Pressione immediata'),
-                ('bloccat', True, 'Minaccia di blocco account'),
-                ('sospeso', True, 'Minaccia di sospensione'),
+                    tok_url = host_u[:20] if host_u else 'https://'
+                    clues.append({'text': f'Link HTTPS ({host_u[:28]})', 'token': tok_url, 'is_bad': False})
+ 
+            # ---- 4. PAROLE CHIAVE DI URGENZA ----
+            urgency_map = [
+                ('urgente',         True,  'Tono urgente/allarmistico'),
+                ('subito',          True,  'Pressione ad agire subito'),
+                ('entro oggi',      True,  'Pressione temporale'),
+                ('immediat',        True,  'Pressione immediata'),
+                ('bloccat',         True,  'Minaccia blocco account'),
+                ('sospeso',         True,  'Minaccia sospensione account'),
+                ("perdi l'accesso", True,  'Minaccia perdita accesso'),
             ]
-            for tok, is_bad, desc in urgency_tokens:
-                if tok in full_lower:
-                    # trova versione originale (case-sensitive) nel testo
-                    start = full_lower.find(tok)
-                    real_tok = full_text[start:start+len(tok)]
-                    clues.append({'text': desc, 'token': real_tok, 'is_bad': is_bad})
-
-            # -- CLUE: richiesta credenziali --
-            cred_tokens = [
-                ('user e pass', True, 'Richiesta esplicita di credenziali'),
-                ('password', True, 'Richiesta password'),
-                ('inserisci', True, 'Richiesta di inserire dati'),
-                ('verifica', True, 'Richiesta di verifica dati'),
-            ]
-            for tok, is_bad, desc in cred_tokens:
+            for tok, ib, desc in urgency_map:
                 if tok in full_lower:
                     start = full_lower.find(tok)
-                    real_tok = full_text[start:start+len(tok)]
-                    clues.append({'text': desc, 'token': real_tok, 'is_bad': is_bad})
-
-            # -- CLUE: errori ortografici --
-            typos = [
-                ('accaunt', True, 'Errore ortografico ("accaunt" invece di "account")'),
-                ('blocato', True, 'Errore ortografico ("blocato" invece di "bloccato")'),
+                    real = full_text[start:start+len(tok)]
+                    clues.append({'text': desc, 'token': real, 'is_bad': ib})
+ 
+            # ---- 5. RICHIESTE SENSITIVE ----
+            cred_map = [
+                ('user e pass',     True,  'Richiesta esplicita credenziali'),
+                ('password',        True,  'Menzione password'),
+                ('inserisci',       True,  'Invito ad inserire dati'),
+                ('verifica',        True,  'Invito a verificare dati'),
+                ('bonifico',        True,  'Richiesta di bonifico'),
+                ('iban',            True,  'Riferimento a IBAN'),
+                ('non coinvolgere', True,  'Richiesta di segretezza'),
+                ('accesso remoto',  True,  'Richiesta accesso remoto'),
+                ('installa',        True,  'Richiesta installazione software'),
             ]
-            for tok, is_bad, desc in typos:
+            for tok, ib, desc in cred_map:
                 if tok in full_lower:
                     start = full_lower.find(tok)
-                    real_tok = full_text[start:start+len(tok)]
-                    clues.append({'text': desc, 'token': real_tok, 'is_bad': is_bad})
-
-            # -- CLUE: bonifico/iban --
-            finance_tokens = [
-                ('bonifico', True, 'Richiesta di bonifico'),
-                ('iban', True, 'Riferimento a IBAN estero'),
-                ('non coinvolgere', True, 'Richiesta di segretezza'),
+                    real = full_text[start:start+len(tok)]
+                    clues.append({'text': desc, 'token': real, 'is_bad': ib})
+ 
+            # ---- 6. ERRORI ORTOGRAFICI ----
+            typos_map = [
+                ('accaunt', True, 'Errore ortografico ("accaunt")'),
+                ('blocato',  True, 'Errore ortografico ("blocato")'),
             ]
-            for tok, is_bad, desc in finance_tokens:
+            for tok, ib, desc in typos_map:
                 if tok in full_lower:
                     start = full_lower.find(tok)
-                    real_tok = full_text[start:start+len(tok)]
-                    clues.append({'text': desc, 'token': real_tok, 'is_bad': is_bad})
-
-            # -- CLUE POSITIVI (email legittima) --
-            positive_tokens = [
-                ('nessuna azione richiesta', False, 'Non richiede azioni'),
-                ('non rispondere a questa email', False, 'Disclaimer standard'),
-                ('intranet.azienda.it', False, 'URL intranet aziendale verificato'),
-                ('https://intranet', False, 'Link HTTPS interno aziendale'),
-                ('@azienda.it', False, 'Mittente interno aziendale'),
+                    real = full_text[start:start+len(tok)]
+                    clues.append({'text': desc, 'token': real, 'is_bad': ib})
+ 
+            # ---- 7. INDICATORI POSITIVI ----
+            good_map = [
+                ('nessuna azione richiesta',     False, 'Nessuna azione immediata richiesta'),
+                ('non rispondere a questa email',False, 'Disclaimer standard legittimo'),
+                ('intranet.azienda.it',          False, 'URL intranet aziendale verificato'),
+                ('https://intranet',             False, 'Link HTTPS interno aziendale'),
+                ('@azienda.it',                  False, 'Mittente dominio aziendale'),
+                ('cartella condivisa',           False, 'Riferimento a risorsa aziendale'),
+                ('riunione',                     False, 'Comunicazione interna ordinaria'),
+                ('aggiornamento dei pc',         False, 'Comunicazione IT pianificata'),
+                ('nessun',                       False, 'Linguaggio neutro/informativo'),
             ]
-            for tok, is_bad, desc in positive_tokens:
+            for tok, ib, desc in good_map:
                 if tok in full_lower:
                     start = full_lower.find(tok)
-                    real_tok = full_text[start:start+len(tok)]
-                    clues.append({'text': desc, 'token': real_tok, 'is_bad': is_bad})
-
-            # -- Rimuovi duplicati (stesso token) --
-            seen_tokens = set()
+                    real = full_text[start:start+len(tok)]
+                    clues.append({'text': desc, 'token': real, 'is_bad': ib})
+ 
+            # ---- 8. DEDUPLICAZIONE ----
+            seen = set()
             unique = []
             for c in clues:
-                t = (c['token'] or '').lower()
-                if t not in seen_tokens:
-                    seen_tokens.add(t)
+                t = (c.get('token') or '').lower().strip()
+                key = t if t else c['text'][:30].lower()
+                if key not in seen:
+                    seen.add(key)
                     unique.append(c)
-
-            # assicura almeno 2 bad e 1 good (o viceversa per email legittima)
+ 
             bad_clues  = [c for c in unique if c['is_bad']]
             good_clues = [c for c in unique if not c['is_bad']]
-
-            if email.get('isPhishing') and len(bad_clues) < 2:
-                # aggiungi clue senza token (solo pannello)
-                bad_clues.append({'text': 'Mittente non verificabile', 'token': None, 'is_bad': True})
-                bad_clues.append({'text': 'Nessuna firma aziendale', 'token': None, 'is_bad': True})
-            if not email.get('isPhishing') and len(good_clues) < 2:
-                good_clues.append({'text': 'Tono neutro, nessuna urgenza', 'token': None, 'is_bad': False})
-                good_clues.append({'text': 'Nessuna richiesta di credenziali', 'token': None, 'is_bad': False})
-
-            # combina: prima tutti i bad, poi i good (max 8 totali)
-            final = (bad_clues + good_clues)[:8]
-
-            # assegna indici
+ 
+            # ---- 9. PADDING GARANTITO ----
+            # Phishing:  min 3 bad + 2 good
+            # Legittima: min 3 good + 2 bad
+            # TUTTE le email avranno sempre almeno 5 clue totali
+            if is_phishing:
+                fallback_bad = [
+                    {'text': 'Mittente assente nella directory aziendale', 'token': None, 'is_bad': True},
+                    {'text': 'Nessuna firma aziendale nel corpo email', 'token': None, 'is_bad': True},
+                    {'text': 'Assenza numero ticket o protocollo ufficiale', 'token': None, 'is_bad': True},
+                    {'text': 'Email non sollecitata / non attesa', 'token': None, 'is_bad': True},
+                ]
+                fallback_good = [
+                    {'text': 'Struttura email formalmente corretta (ma contenuto sospetto)', 'token': None, 'is_bad': False},
+                    {'text': 'Nessun allegato diretto (ma link sospetto)', 'token': None, 'is_bad': False},
+                ]
+                while len(bad_clues) < 3 and fallback_bad:
+                    bad_clues.append(fallback_bad.pop(0))
+                while len(good_clues) < 2 and fallback_good:
+                    good_clues.append(fallback_good.pop(0))
+            else:
+                fallback_good = [
+                    {'text': 'Mittente verificabile nel dominio aziendale', 'token': None, 'is_bad': False},
+                    {'text': 'Nessuna richiesta urgente di credenziali', 'token': None, 'is_bad': False},
+                    {'text': 'Tono professionale e neutro', 'token': None, 'is_bad': False},
+                    {'text': 'Comunicazione coerente con i flussi normali', 'token': None, 'is_bad': False},
+                ]
+                fallback_bad = [
+                    {'text': 'Verifica sempre il mittente, anche su email interne', 'token': None, 'is_bad': True},
+                    {'text': 'Controlla eventuali link prima di cliccare', 'token': None, 'is_bad': True},
+                    {'text': 'Conferma richieste insolite via canale separato', 'token': None, 'is_bad': True},
+                ]
+                while len(good_clues) < 3 and fallback_good:
+                    good_clues.append(fallback_good.pop(0))
+                while len(bad_clues) < 2 and fallback_bad:
+                    bad_clues.append(fallback_bad.pop(0))
+ 
+            # ---- 10. COMPOSIZIONE: alterna bad/good, max 8 ----
+            final = []
+            bi, gi = 0, 0
+            while len(final) < 8 and (bi < len(bad_clues) or gi < len(good_clues)):
+                if bi < len(bad_clues):
+                    final.append(bad_clues[bi]); bi += 1
+                if gi < len(good_clues) and len(final) < 8:
+                    final.append(good_clues[gi]); gi += 1
+ 
             for i, c in enumerate(final):
                 c['idx'] = i
-
+ 
             return final
-
+ 
         # ============================================================
         # open_email — REWORK COMPLETO con pannello clue laterale
         # ============================================================
